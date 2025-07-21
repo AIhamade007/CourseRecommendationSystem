@@ -5,7 +5,7 @@ const API_KEY = process.env.REACT_APP_GEMINI_API_KEY || 'AIzaSyBqJHeeP1toK3eFFAz
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-export const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+export const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
 
 export const generateCourseRecommendation = async (
   userMessage: string,
