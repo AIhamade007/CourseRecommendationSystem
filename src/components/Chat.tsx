@@ -121,7 +121,7 @@ const Chat: React.FC = () => {
               <div
                 style={{
                   ...styles.message,
-                  backgroundColor: message.isUser ? '#4e54c8' : '#f1f3f5',
+                  backgroundColor: message.isUser ? '#7a35d5' : '#f1f3f5',
                   color: message.isUser ? 'white' : '#212529',
                   alignSelf: message.isUser ? 'flex-end' : 'flex-start'
                 }}
@@ -183,9 +183,15 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     height: '100vh',
-    fontFamily: "'Inter', sans-serif"
+    fontFamily: "'Inter', sans-serif",
+    overflow: 'hidden' // <-- Add this
   },
   header: {
+    position: 'fixed' as 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
     backgroundImage: 'linear-gradient(to right, #7a35d5, #b84ef1)',
     backgroundColor: '#7a35d5', // optional fallback color
     color: 'white',
@@ -236,7 +242,9 @@ const styles = {
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed', 
     backdropFilter: 'blur(2px)', 
-    padding: '20px 0',
+    paddingTop: '120px',
+    paddingBottom: '100px',
+    overflow: 'hidden' // <-- Add this
   },
   messagesContainer: {
     flex: 1,
@@ -244,7 +252,8 @@ const styles = {
     padding: '20px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px'
+    gap: '10px',
+    height: 'calc(100vh - 220px)' // <-- Adjust height: header (120px) + inputForm (100px)
   },
   messageWrapper: {
     display: 'flex',
@@ -290,7 +299,7 @@ const styles = {
     animationDelay: '0.4s',
   },
   inputForm: {
-    position: 'absolute' as 'absolute',
+    position: 'fixed' as const,
     bottom: 0,
     left: 0,
     right: 0,
@@ -299,7 +308,7 @@ const styles = {
     backgroundColor: 'white',
     borderTop: '1px solid #e9ecef',
     boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
-    zIndex: 1
+    zIndex: 10
   },
   input: {
     flex: 1,
