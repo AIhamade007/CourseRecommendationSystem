@@ -209,8 +209,11 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
-    fontFamily: 'Arial, sans-serif',
+    backgroundImage: 'url("/smsm.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    fontFamily: '"Inter", sans-serif',
     padding: '20px'
   },
   formContainer: {
@@ -271,14 +274,16 @@ const styles = {
     marginRight: '8px'
   },
   button: {
-    backgroundColor: '#007bff',
+    background: 'linear-gradient(to right, #7a35d5, #b84ef1)',
     color: 'white',
     padding: '12px',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '20px',
     fontSize: '16px',
+    fontWeight: 500,
     cursor: 'pointer',
     transition: 'background-color 0.2s',
+    boxShadow: '0 4px 10px rgba(184, 78, 241, 0.3)',
     marginTop: '10px'
   },
   error: {
@@ -295,7 +300,7 @@ const styles = {
     color: '#666'
   },
   link: {
-    color: '#007bff',
+    color: '#7a35d5',
     textDecoration: 'none'
   }
 };

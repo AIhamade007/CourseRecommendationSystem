@@ -186,8 +186,8 @@ const styles = {
     fontFamily: "'Inter', sans-serif"
   },
   header: {
-    backgroundImage: 'linear-gradient(to right, #4e54c8, #8f94fb)',
-    backgroundColor: '#4e54c8', // optional fallback color
+    backgroundImage: 'linear-gradient(to right, #7a35d5, #b84ef1)',
+    backgroundColor: '#7a35d5', // optional fallback color
     color: 'white',
     padding: '24px 32px',
     borderBottomLeftRadius: '16px',
@@ -212,7 +212,7 @@ const styles = {
     opacity: 0.85
   },
   logoutButton: {
-    backgroundImage: 'linear-gradient(to right, #4e54c8, #8f94fb)',
+    backgroundImage: 'linear-gradient(to right, #7a35d5)',
     color: 'white',
     border: 'none',
     padding: '12px 24px',
@@ -313,7 +313,7 @@ const styles = {
     transition: 'border-color 0.2s ease'
   },
   sendButton: {
-    backgroundImage: 'linear-gradient(to right, #4e54c8, #8f94fb)',
+    backgroundImage: 'linear-gradient(to right, #7a35d5, #b84ef1)',
     color: 'white',
     border: 'none',
     padding: '12px 24px',

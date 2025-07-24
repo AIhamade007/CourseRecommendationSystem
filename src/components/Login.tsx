@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,8 +8,14 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { currentUser, login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+  if (currentUser) {
+    navigate('/chat');
+  }
+}, [currentUser, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +24,6 @@ const Login: React.FC = () => {
       setError('');
       setLoading(true);
       await login(email, password);
-      navigate('/chat');
     } catch (error: any) {
       let message = "Something went wrong. Please try again.";
 
@@ -95,8 +100,11 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
-    fontFamily: 'Arial, sans-serif'
+    backgroundImage: 'url("/smsm.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    fontFamily: '"Inter", sans-serif'
   },
   formContainer: {
     backgroundColor: 'white',
@@ -108,16 +116,17 @@ const styles = {
   },
   title: {
     textAlign: 'center' as const,
-    marginBottom: '10px',
-    color: '#333',
-    fontSize: '24px'
+    marginBottom: '8px',
+    color: '#111',
+    fontSize: '26px',
+    fontWeight: 600
   },
   subtitle: {
     textAlign: 'center' as const,
-    marginBottom: '30px',
-    color: '#666',
-    fontSize: '18px',
-    fontWeight: 'normal' as const
+    marginBottom: '24px',
+    color: '#555',
+    fontSize: '15px',
+    fontWeight: 400 as const
   },
   form: {
     display: 'flex',
@@ -135,20 +144,24 @@ const styles = {
   input: {
     width: '100%',
     padding: '12px',
-    border: '1px solid #ddd',
-    borderRadius: '6px',
+    border: '1px solid #ccc',
+    borderRadius: '8px',
     fontSize: '16px',
-    boxSizing: 'border-box' as const
+    boxSizing: 'border-box' as const,
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    outline: 'none' as const
   },
   button: {
-    backgroundColor: '#007bff',
+    background: 'linear-gradient(to right, #7a35d5, #b84ef1)',
     color: 'white',
     padding: '12px',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '20px',
     fontSize: '16px',
+    fontWeight: 500,
     cursor: 'pointer',
-    transition: 'background-color 0.2s'
+    transition: 'background-color 0.2s',
+    boxShadow: '0 2px 8px rgba(106, 17, 203, 0.2)'
   },
   error: {
     backgroundColor: '#f8d7da',
@@ -164,7 +177,7 @@ const styles = {
     color: '#666'
   },
   link: {
-    color: '#007bff',
+    color: '#7a35d5',
     textDecoration: 'none'
   }
 };
