@@ -11,6 +11,9 @@ const Chat: React.FC = () => {
 
   const { currentUser, logout } = useAuth();
 
+  const [isHovered, setIsHovered] = useState(false);
+
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -24,7 +27,7 @@ const Chat: React.FC = () => {
     if (currentUser && messages.length === 0) {
       const welcomeMessage: ChatMessage = {
         id: Date.now().toString(),
-        content: `Hello ${currentUser.name}! I'm your course recommendation assistant. I know you're interested in ${currentUser.subjectInterests.join(', ')} and teach ${currentUser.gradeLevel} level. How can I help you find relevant courses or professional development opportunities today?`,
+        content: `Hello ${currentUser.name}! I'm your course recommendation assistant. How can I help you today?`,
         isUser: false,
         timestamp: new Date()
       };
@@ -97,7 +100,7 @@ const Chat: React.FC = () => {
         <div style={styles.userInfo}>
           <h2 style={styles.title}>Course Recommendation Chat</h2>
           <p style={styles.userDetails}>
-            Welcome, {currentUser.name} | {currentUser.gradeLevel} | {currentUser.subjectInterests.join(', ')}
+            Welcome, {currentUser.name} 
           </p>
         </div>
         <button onClick={handleLogout} style={styles.logoutButton}>
@@ -118,8 +121,9 @@ const Chat: React.FC = () => {
               <div
                 style={{
                   ...styles.message,
-                  backgroundColor: message.isUser ? '#007bff' : '#f1f1f1',
-                  color: message.isUser ? 'white' : '#333'
+                  backgroundColor: message.isUser ? '#4e54c8' : '#f1f3f5',
+                  color: message.isUser ? 'white' : '#212529',
+                  alignSelf: message.isUser ? 'flex-end' : 'flex-start'
                 }}
               >
                 <div style={styles.messageContent}>{message.content}</div>
@@ -158,7 +162,13 @@ const Chat: React.FC = () => {
           <button 
             type="submit" 
             disabled={loading || !inputMessage.trim()}
-            style={styles.sendButton}
+            style={{
+              ...styles.sendButton,
+              opacity: isHovered ? 0.9 : 1,
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
             Send
           </button>
@@ -173,37 +183,48 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     height: '100vh',
-    fontFamily: 'Arial, sans-serif'
+    fontFamily: "'Inter', sans-serif"
   },
   header: {
-    backgroundColor: '#007bff',
+    backgroundImage: 'linear-gradient(to right, #4e54c8, #8f94fb)',
+    backgroundColor: '#4e54c8', // optional fallback color
     color: 'white',
-    padding: '20px',
+    padding: '24px 32px',
+    borderBottomLeftRadius: '16px',
+    borderBottomRightRadius: '16px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
   },
   userInfo: {
     flex: 1
   },
   title: {
     margin: 0,
-    fontSize: '24px'
+    fontSize: '24px',
+    fontWeight: 600
   },
   userDetails: {
-    margin: '5px 0 0 0',
-    fontSize: '14px',
-    opacity: 0.9
+    margin: '8px 0 0 0',
+    fontSize: '15px',
+    fontWeight: 500,
+    opacity: 0.85
   },
   logoutButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundImage: 'linear-gradient(to right, #4e54c8, #8f94fb)',
     color: 'white',
-    border: '1px solid rgba(255,255,255,0.3)',
-    padding: '8px 16px',
-    borderRadius: '4px',
+    border: 'none',
+    padding: '12px 24px',
+    borderRadius: '10px',
+    fontSize: '15px',
+    fontWeight: 600,
     cursor: 'pointer',
-    fontSize: '14px'
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    transition: 'all 0.2s ease-in-out',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
   },
   chatContainer: {
     flex: 1,
@@ -221,14 +242,16 @@ const styles = {
   },
   messageWrapper: {
     display: 'flex',
-    width: '100%'
+    width: '100%',
+    animation: 'fadeIn 0.3s ease-in-out'
   },
   message: {
-    maxWidth: '70%',
-    padding: '12px 16px',
-    borderRadius: '18px',
+    maxWidth: '75%',
+    padding: '14px 18px',
+    borderRadius: '20px',
     wordWrap: 'break-word' as const,
-    boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+    boxShadow: '0 3px 8px rgba(0,0,0,0.05)',
+    transition: 'transform 0.2s ease'
   },
   messageContent: {
     fontSize: '14px',
@@ -247,12 +270,12 @@ const styles = {
     height: '20px',
   },
   dot: {
-    width: '8px',
-    height: '8px',
+    width: '10px',
+    height: '10px',
     borderRadius: '50%',
-    backgroundColor: '#bbb',
+    backgroundColor: '#ccc',
     display: 'inline-block',
-    animation: 'typingBounce 1.4s infinite both',
+    animation: 'typingBounce 1.4s infinite ease-in-out',
   },
   dot2: {
     animationDelay: '0.2s',
@@ -268,29 +291,39 @@ const styles = {
   },
   input: {
     flex: 1,
-    padding: '12px',
-    border: '1px solid #ddd',
-    borderRadius: '24px',
-    fontSize: '14px',
+    padding: '14px 18px',
+    border: '1px solid #ccc',
+    borderRadius: '999px',
+    fontSize: '15px',
     outline: 'none',
-    marginRight: '10px'
+    marginRight: '12px',
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
+    transition: 'border-color 0.2s ease'
   },
   sendButton: {
-    backgroundColor: '#007bff',
+    backgroundImage: 'linear-gradient(to right, #4e54c8, #8f94fb)',
     color: 'white',
     border: 'none',
     padding: '12px 24px',
-    borderRadius: '24px',
+    borderRadius: '999px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 'bold' as const
+    fontSize: '15px',
+    fontWeight: 600,
+    transition: 'all 0.3s ease-in-out',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
   }
 };
 
 const typingKeyframes = `
 @keyframes typingBounce {
-  0%, 80%, 100% { transform: scale(0.7); opacity: 0.7; }
-  40% { transform: scale(1); opacity: 1; }
+  0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+  40% { transform: scale(1.2); opacity: 1; }
+}`;
+
+const messageFadeIn = `
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }`;
 
 if (typeof document !== 'undefined' && !document.getElementById('typing-keyframes')) {
@@ -299,5 +332,13 @@ if (typeof document !== 'undefined' && !document.getElementById('typing-keyframe
   style.innerHTML = typingKeyframes;
   document.head.appendChild(style);
 }
+
+if (typeof document !== 'undefined' && !document.getElementById('fade-in-keyframes')) {
+  const style2 = document.createElement('style');
+  style2.id = 'fade-in-keyframes';
+  style2.innerHTML = messageFadeIn;
+  document.head.appendChild(style2);
+}
+
 
 export default Chat;
