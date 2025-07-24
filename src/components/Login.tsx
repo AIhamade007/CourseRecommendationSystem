@@ -20,7 +20,27 @@ const Login: React.FC = () => {
       await login(email, password);
       navigate('/chat');
     } catch (error: any) {
-      setError('Failed to log in: ' + (error.message || 'Unknown error'));
+      let message = "Something went wrong. Please try again.";
+
+      switch (error.code) {
+      case "auth/invalid-credential":
+      case "auth/user-not-found":
+      case "auth/wrong-password":
+        message = "Invalid email or password.";
+        break;
+      case "auth/too-many-requests":
+        message = "Too many login attempts. Try again later.";
+        break;
+      case "auth/network-request-failed":
+        message = "Network error. Please check your internet connection.";
+        break;
+
+      default:
+        message = "Login failed. Please try again.";
+    }
+
+    setError(message);
+    
     }
     setLoading(false);
   };
