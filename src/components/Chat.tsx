@@ -88,57 +88,94 @@ const Chat: React.FC = () => {
   };
 
   if (!currentUser) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center h-screen text-lg">Loading...</div>;
+  }
+
+  // Tailwind keyframes for typing animation
+  const typingKeyframes = `
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.7; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+  `;
+  if (typeof document !== 'undefined' && !document.getElementById('typing-keyframes')) {
+    const style = document.createElement('style');
+    style.id = 'typing-keyframes';
+    style.innerHTML = typingKeyframes;
+    document.head.appendChild(style);
   }
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <div style={styles.userInfo}>
-          <h2 style={styles.title}>Course Recommendation Chat</h2>
-          <p style={styles.userDetails}>
+    <div className="flex flex-col h-screen font-sans bg-gray-100">
+      <header className="bg-blue-600 text-white p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center shadow-md">
+        <div className="flex-1 mb-2 sm:mb-0">
+          <h2 className="text-2xl font-bold mb-1">Course Recommendation Chat</h2>
+          <p className="text-sm opacity-90">
             Welcome, {currentUser.name} | {currentUser.gradeLevel} | {currentUser.subjectInterests.join(', ')}
           </p>
         </div>
-        <button onClick={handleLogout} style={styles.logoutButton}>
+        <button
+          onClick={handleLogout}
+          className="bg-white/20 border border-white/30 text-white px-4 py-2 rounded hover:bg-white/30 transition-colors text-sm font-medium"
+        >
           Logout
         </button>
       </header>
 
-      <div style={styles.chatContainer}>
-        <div style={styles.messagesContainer}>
+      <div className="flex-1 flex flex-col bg-gray-100">
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3" style={{scrollbarWidth: 'thin'}}>
           {messages.map((message) => (
             <div
               key={message.id}
-              style={{
-                ...styles.messageWrapper,
-                justifyContent: message.isUser ? 'flex-end' : 'flex-start'
-              }}
+              className={`flex w-full ${message.isUser ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                style={{
-                  ...styles.message,
-                  backgroundColor: message.isUser ? '#007bff' : '#f1f1f1',
-                  color: message.isUser ? 'white' : '#333'
-                }}
+                className={`max-w-[70%] px-4 py-3 rounded-2xl shadow-sm break-words whitespace-pre-wrap text-sm flex flex-col ${
+                  message.isUser
+                    ? 'bg-blue-600 text-white rounded-br-none'
+                    : 'bg-white text-gray-800 rounded-bl-none'
+                }`}
               >
-                <div style={styles.messageContent}>{message.content}</div>
-                <div style={styles.timestamp}>
-                  {message.timestamp.toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                <div>{message.content}</div>
+                <div className="text-xs mt-1 opacity-70 self-end">
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
                   })}
                 </div>
               </div>
             </div>
           ))}
           {loading && (
-            <div style={{ ...styles.messageWrapper, justifyContent: 'flex-start' }}>
-              <div style={{ ...styles.message, backgroundColor: '#f1f1f1' }}>
-                <div style={styles.typingIndicator}>
-                  <span style={styles.dot}></span>
-                  <span style={{ ...styles.dot, ...styles.dot2 }}></span>
-                  <span style={{ ...styles.dot, ...styles.dot3 }}></span>
+            <div className="flex w-full justify-start">
+              <div className="max-w-[70%] px-4 py-3 rounded-2xl shadow-sm bg-white">
+                <div className="flex gap-1 items-center h-5">
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#bbb',
+                    display: 'inline-block',
+                    animation: 'typingBounce 1.4s infinite both',
+                  }}></span>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#bbb',
+                    display: 'inline-block',
+                    animation: 'typingBounce 1.4s infinite both',
+                    animationDelay: '0.2s',
+                  }}></span>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#bbb',
+                    display: 'inline-block',
+                    animation: 'typingBounce 1.4s infinite both',
+                    animationDelay: '0.4s',
+                  }}></span>
                 </div>
               </div>
             </div>
@@ -146,19 +183,22 @@ const Chat: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSendMessage} style={styles.inputForm}>
+        <form
+          onSubmit={handleSendMessage}
+          className="flex p-4 bg-white border-t border-gray-200 gap-2"
+        >
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Ask me about courses, professional development, or teaching resources..."
-            style={styles.input}
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-400 transition disabled:bg-gray-100"
             disabled={loading}
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading || !inputMessage.trim()}
-            style={styles.sendButton}
+            className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold text-sm shadow hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Send
           </button>
@@ -167,137 +207,5 @@ const Chat: React.FC = () => {
     </div>
   );
 };
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    height: '100vh',
-    fontFamily: 'Arial, sans-serif'
-  },
-  header: {
-    backgroundColor: '#007bff',
-    color: 'white',
-    padding: '20px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-  },
-  userInfo: {
-    flex: 1
-  },
-  title: {
-    margin: 0,
-    fontSize: '24px'
-  },
-  userDetails: {
-    margin: '5px 0 0 0',
-    fontSize: '14px',
-    opacity: 0.9
-  },
-  logoutButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    color: 'white',
-    border: '1px solid rgba(255,255,255,0.3)',
-    padding: '8px 16px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px'
-  },
-  chatContainer: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    backgroundColor: '#f8f9fa'
-  },
-  messagesContainer: {
-    flex: 1,
-    overflowY: 'auto' as const,
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '10px'
-  },
-  messageWrapper: {
-    display: 'flex',
-    width: '100%'
-  },
-  message: {
-    maxWidth: '70%',
-    padding: '12px 16px',
-    borderRadius: '18px',
-    wordWrap: 'break-word' as const,
-    boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-  },
-  messageContent: {
-    fontSize: '14px',
-    lineHeight: '1.4',
-    whiteSpace: 'pre-wrap' as const
-  },
-  timestamp: {
-    fontSize: '11px',
-    marginTop: '4px',
-    opacity: 0.7
-  },
-  typingIndicator: {
-    display: 'flex',
-    gap: '4px',
-    alignItems: 'center',
-    height: '20px',
-  },
-  dot: {
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    backgroundColor: '#bbb',
-    display: 'inline-block',
-    animation: 'typingBounce 1.4s infinite both',
-  },
-  dot2: {
-    animationDelay: '0.2s',
-  },
-  dot3: {
-    animationDelay: '0.4s',
-  },
-  inputForm: {
-    display: 'flex',
-    padding: '20px',
-    backgroundColor: 'white',
-    borderTop: '1px solid #e9ecef'
-  },
-  input: {
-    flex: 1,
-    padding: '12px',
-    border: '1px solid #ddd',
-    borderRadius: '24px',
-    fontSize: '14px',
-    outline: 'none',
-    marginRight: '10px'
-  },
-  sendButton: {
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    padding: '12px 24px',
-    borderRadius: '24px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 'bold' as const
-  }
-};
-
-const typingKeyframes = `
-@keyframes typingBounce {
-  0%, 80%, 100% { transform: scale(0.7); opacity: 0.7; }
-  40% { transform: scale(1); opacity: 1; }
-}`;
-
-if (typeof document !== 'undefined' && !document.getElementById('typing-keyframes')) {
-  const style = document.createElement('style');
-  style.id = 'typing-keyframes';
-  style.innerHTML = typingKeyframes;
-  document.head.appendChild(style);
-}
 
 export default Chat;
