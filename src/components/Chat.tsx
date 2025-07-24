@@ -230,7 +230,13 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column' as const,
-    backgroundColor: '#f8f9fa'
+    backgroundImage: 'url("/GBG1.png")',
+    backgroundSize: 'cover',
+    backgroundRepeat: 'repeat', 
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed', 
+    backdropFilter: 'blur(2px)', 
+    padding: '20px 0',
   },
   messagesContainer: {
     flex: 1,
@@ -284,10 +290,16 @@ const styles = {
     animationDelay: '0.4s',
   },
   inputForm: {
+    position: 'absolute' as 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     display: 'flex',
     padding: '20px',
     backgroundColor: 'white',
-    borderTop: '1px solid #e9ecef'
+    borderTop: '1px solid #e9ecef',
+    boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
+    zIndex: 1
   },
   input: {
     flex: 1,
