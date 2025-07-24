@@ -2,16 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { generateCourseRecommendation } from '../config/gemini';
 import { ChatMessage } from '../types/User';
-import axios from 'axios';
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [chats, setChats] = useState<any[]>([]);
-  const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
-  const [chatTitleInput, setChatTitleInput] = useState('');
 
   const { currentUser, logout } = useAuth();
 
@@ -39,61 +35,10 @@ const Chat: React.FC = () => {
     }
   }, [currentUser, messages.length]);
 
-  // Fetch chats for the user
-  useEffect(() => {
-    if (currentUser) {
-      axios.get(`http://localhost:4000/chats?userId=${currentUser.uid}`)
-        .then(res => {
-          setChats(res.data);
-          if (res.data.length > 0 && selectedChatId === null) {
-            setSelectedChatId(res.data[0].id);
-          }
-        });
-    }
-  }, [currentUser]);
-
-  // Fetch messages for selected chat
-  useEffect(() => {
-    if (selectedChatId) {
-      axios.get(`http://localhost:4000/chats/${selectedChatId}/messages`)
-        .then(res => {
-          setMessages(res.data.map((msg: any) => ({
-            id: msg.id.toString(),
-            content: msg.content,
-            isUser: msg.sender === 'user',
-            timestamp: new Date(msg.timestamp)
-          })));
-        });
-    }
-  }, [selectedChatId]);
-
-  // Create new chat
-  const handleCreateChat = async () => {
-    if (!currentUser) return;
-    const res = await axios.post('http://localhost:4000/chats', {
-      userId: currentUser.uid,
-      title: chatTitleInput || 'New Chat'
-    });
-    setChats([res.data, ...chats]);
-    setSelectedChatId(res.data.id);
-    setChatTitleInput('');
-    setMessages([]);
-  };
-
-  // Delete chat
-  const handleDeleteChat = async (chatId: number) => {
-    await axios.delete(`http://localhost:4000/chats/${chatId}`);
-    setChats(chats.filter(c => c.id !== chatId));
-    if (selectedChatId === chatId) {
-      setSelectedChatId(chats.length > 1 ? chats.find(c => c.id !== chatId)?.id || null : null);
-      setMessages([]);
-    }
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inputMessage.trim() || loading || !currentUser || !selectedChatId) return;
+    if (!inputMessage.trim() || loading || !currentUser) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -105,12 +50,6 @@ const Chat: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setLoading(true);
-
-    // Save user message to backend
-    await axios.post(`http://localhost:4000/chats/${selectedChatId}/messages`, {
-      sender: 'user',
-      content: userMessage.content
-    });
 
     try {
       const userProfile = {
@@ -130,11 +69,6 @@ const Chat: React.FC = () => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-      // Save assistant message to backend
-      await axios.post(`http://localhost:4000/chats/${selectedChatId}/messages`, {
-        sender: 'assistant',
-        content: assistantMessage.content
-      });
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -143,10 +77,6 @@ const Chat: React.FC = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
-      await axios.post(`http://localhost:4000/chats/${selectedChatId}/messages`, {
-        sender: 'assistant',
-        content: errorMessage.content
-      });
     }
 
     setLoading(false);
@@ -165,108 +95,84 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      {/* Sidebar for chat history */}
-      <div style={{ width: 260, background: '#f4f6fb', borderRight: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: 16, borderBottom: '1px solid #e0e0e0' }}>
-          <input
-            type="text"
-            value={chatTitleInput}
-            onChange={e => setChatTitleInput(e.target.value)}
-            placeholder="New chat title"
-            style={{ width: '70%', padding: 6, borderRadius: 6, border: '1px solid #ccc', marginRight: 8 }}
-          />
-          <button onClick={handleCreateChat} style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: '#4e54c8', color: 'white', fontWeight: 600 }}>+</button>
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <div style={styles.userInfo}>
+          <h2 style={styles.title}>Course Recommendation Chat</h2>
+          <p style={styles.userDetails}>
+            Welcome, {currentUser.name} 
+          </p>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {chats.map(chat => (
-            <div key={chat.id} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: selectedChatId === chat.id ? '#e6e9f8' : 'transparent', cursor: 'pointer', borderBottom: '1px solid #ececec' }}>
-              <div onClick={() => setSelectedChatId(chat.id)} style={{ flex: 1, fontWeight: selectedChatId === chat.id ? 700 : 500 }}>{chat.title || 'Untitled Chat'}</div>
-              <button onClick={() => handleDeleteChat(chat.id)} style={{ marginLeft: 8, background: 'none', border: 'none', color: '#c00', fontWeight: 700, cursor: 'pointer' }}>🗑️</button>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Main chat area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <header style={styles.header}>
-          <div style={styles.userInfo}>
-            <h2 style={styles.title}>Course Recommendation Chat</h2>
-            <p style={styles.userDetails}>
-              Welcome, {currentUser.name} 
-            </p>
-          </div>
-          <button onClick={handleLogout} style={styles.logoutButton}>
-            Logout
-          </button>
-        </header>
+        <button onClick={handleLogout} style={styles.logoutButton}>
+          Logout
+        </button>
+      </header>
 
-        <div style={styles.chatContainer}>
-          <div style={styles.messagesContainer}>
-            {messages.map((message) => (
+      <div style={styles.chatContainer}>
+        <div style={styles.messagesContainer}>
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              style={{
+                ...styles.messageWrapper,
+                justifyContent: message.isUser ? 'flex-end' : 'flex-start'
+              }}
+            >
               <div
-                key={message.id}
                 style={{
-                  ...styles.messageWrapper,
-                  justifyContent: message.isUser ? 'flex-end' : 'flex-start'
+                  ...styles.message,
+                  backgroundColor: message.isUser ? '#4e54c8' : '#f1f3f5',
+                  color: message.isUser ? 'white' : '#212529',
+                  alignSelf: message.isUser ? 'flex-end' : 'flex-start'
                 }}
               >
-                <div
-                  style={{
-                    ...styles.message,
-                    backgroundColor: message.isUser ? '#4e54c8' : '#f1f3f5',
-                    color: message.isUser ? 'white' : '#212529',
-                    alignSelf: message.isUser ? 'flex-end' : 'flex-start'
-                  }}
-                >
-                  <div style={styles.messageContent}>{message.content}</div>
-                  <div style={styles.timestamp}>
-                    {message.timestamp.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </div>
+                <div style={styles.messageContent}>{message.content}</div>
+                <div style={styles.timestamp}>
+                  {message.timestamp.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
                 </div>
               </div>
-            ))}
-            {loading && (
-              <div style={{ ...styles.messageWrapper, justifyContent: 'flex-start' }}>
-                <div style={{ ...styles.message, backgroundColor: '#f1f1f1' }}>
-                  <div style={styles.typingIndicator}>
-                    <span style={styles.dot}></span>
-                    <span style={{ ...styles.dot, ...styles.dot2 }}></span>
-                    <span style={{ ...styles.dot, ...styles.dot3 }}></span>
-                  </div>
+            </div>
+          ))}
+          {loading && (
+            <div style={{ ...styles.messageWrapper, justifyContent: 'flex-start' }}>
+              <div style={{ ...styles.message, backgroundColor: '#f1f1f1' }}>
+                <div style={styles.typingIndicator}>
+                  <span style={styles.dot}></span>
+                  <span style={{ ...styles.dot, ...styles.dot2 }}></span>
+                  <span style={{ ...styles.dot, ...styles.dot3 }}></span>
                 </div>
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <form onSubmit={handleSendMessage} style={styles.inputForm}>
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask me about courses, professional development, or teaching resources..."
-              style={styles.input}
-              disabled={loading}
-            />
-            <button 
-              type="submit" 
-              disabled={loading || !inputMessage.trim()}
-              style={{
-                ...styles.sendButton,
-                opacity: isHovered ? 0.9 : 1,
-                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-              }}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              Send
-            </button>
-          </form>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
+
+        <form onSubmit={handleSendMessage} style={styles.inputForm}>
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Ask me about courses, professional development, or teaching resources..."
+            style={styles.input}
+            disabled={loading}
+          />
+          <button 
+            type="submit" 
+            disabled={loading || !inputMessage.trim()}
+            style={{
+              ...styles.sendButton,
+              opacity: isHovered ? 0.9 : 1,
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            Send
+          </button>
+        </form>
       </div>
     </div>
   );
