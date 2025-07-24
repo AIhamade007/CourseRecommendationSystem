@@ -136,9 +136,9 @@ const Chat: React.FC = () => {
             <div style={{ ...styles.messageWrapper, justifyContent: 'flex-start' }}>
               <div style={{ ...styles.message, backgroundColor: '#f1f1f1' }}>
                 <div style={styles.typingIndicator}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                  <span style={styles.dot}></span>
+                  <span style={{ ...styles.dot, ...styles.dot2 }}></span>
+                  <span style={{ ...styles.dot, ...styles.dot3 }}></span>
                 </div>
               </div>
             </div>
@@ -242,7 +242,23 @@ const styles = {
   },
   typingIndicator: {
     display: 'flex',
-    gap: '4px'
+    gap: '4px',
+    alignItems: 'center',
+    height: '20px',
+  },
+  dot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    backgroundColor: '#bbb',
+    display: 'inline-block',
+    animation: 'typingBounce 1.4s infinite both',
+  },
+  dot2: {
+    animationDelay: '0.2s',
+  },
+  dot3: {
+    animationDelay: '0.4s',
   },
   inputForm: {
     display: 'flex',
@@ -270,5 +286,18 @@ const styles = {
     fontWeight: 'bold' as const
   }
 };
+
+const typingKeyframes = `
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.7; }
+  40% { transform: scale(1); opacity: 1; }
+}`;
+
+if (typeof document !== 'undefined' && !document.getElementById('typing-keyframes')) {
+  const style = document.createElement('style');
+  style.id = 'typing-keyframes';
+  style.innerHTML = typingKeyframes;
+  document.head.appendChild(style);
+}
 
 export default Chat;
