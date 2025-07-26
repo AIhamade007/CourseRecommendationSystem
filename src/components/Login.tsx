@@ -8,7 +8,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { currentUser, login } = useAuth();
+  const { currentUser, login, loginAnonymously } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +50,24 @@ const Login: React.FC = () => {
     setLoading(false);
   };
 
+  const handleAnonymousLogin = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      await loginAnonymously();
+      // navigation will be handled by useEffect
+    } catch (error: any) {
+      let message = "Something went wrong. Please try again.";
+      if (error.code === "auth/operation-not-allowed") {
+        message = "Anonymous login is not enabled.";
+      } else if (error.code === "auth/network-request-failed") {
+        message = "Network error. Please check your internet connection.";
+      }
+      setError(message);
+    }
+    setLoading(false);
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.formContainer}>
@@ -85,6 +103,17 @@ const Login: React.FC = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+        <button
+          disabled={loading}
+          onClick={handleAnonymousLogin}
+          style={{
+            ...styles.button,
+            marginTop: '10px',
+            background: 'linear-gradient(to right, #888, #bbb)'
+          }}
+        >
+          {loading ? 'Logging in...' : 'Continue as Guest'}
+        </button>
         
         <p style={styles.linkText}>
           Don't have an account? <Link to="/register" style={styles.link}>Register here</Link>

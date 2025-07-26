@@ -29,4 +29,5 @@ export interface AuthContextType {
   register: (email: string, password: string, profile: UserProfile) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  loginAnonymously: () => Promise<void>;
 }

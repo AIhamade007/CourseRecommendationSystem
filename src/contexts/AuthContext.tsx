@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  signInAnonymously, // Add this import
   User as FirebaseUser
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -51,12 +52,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
+  // Add anonymous login
+  const loginAnonymously = async () => {
+    await signInAnonymously(auth);
+  };
+
   const logout = async () => {
     await signOut(auth);
     setCurrentUser(null);
   };
 
   const fetchUserData = async (firebaseUser: FirebaseUser): Promise<User | null> => {
+    // If user is anonymous, return minimal user object
+    if (firebaseUser.isAnonymous) {
+      return {
+        uid: firebaseUser.uid,
+        name: 'Anonymous',
+        email: '',
+        subjectInterests: [],
+        gradeLevel: '',
+        experience: '',
+        createdAt: new Date()
+      };
+    }
     try {
       const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
       if (userDoc.exists()) {
@@ -97,7 +115,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
-    loading
+    loading,
+    loginAnonymously // Add this to context value
   };
 
   return (
