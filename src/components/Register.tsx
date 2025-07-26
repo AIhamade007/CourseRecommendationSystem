@@ -143,12 +143,9 @@ const Register: React.FC = () => {
               style={styles.input}
             >
               <option value="">Select Grade Level</option>
-              <option value="K-2">K-2 (Kindergarten - 2nd Grade)</option>
-              <option value="3-5">3-5 (3rd - 5th Grade)</option>
-              <option value="6-8">6-8 (Middle School)</option>
-              <option value="9-12">9-12 (High School)</option>
-              <option value="College">College/University</option>
-              <option value="Adult Education">Adult Education</option>
+              <option value="elementary school">elementary school (elementary school)</option>
+              <option value="Middle School">Middle School (Middle School)</option>
+              <option value="High School">High School (High School)</option>
             </select>
           </div>
 
