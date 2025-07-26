@@ -40,7 +40,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       email: profile.email,
       subjectInterests: profile.subjectInterests,
       gradeLevel: profile.gradeLevel,
-      experience: profile.experience,
       createdAt: new Date()
     };
 
@@ -71,7 +70,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: '',
         subjectInterests: [],
         gradeLevel: '',
-        experience: '',
         createdAt: new Date()
       };
     }
@@ -85,7 +83,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: userData.email,
           subjectInterests: userData.subjectInterests,
           gradeLevel: userData.gradeLevel,
-          experience: userData.experience,
           createdAt: userData.createdAt.toDate()
         };
       }
