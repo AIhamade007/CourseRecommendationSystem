@@ -8,7 +8,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { currentUser, login } = useAuth();
+  const { currentUser, login, loginAnonymously } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +50,30 @@ const Login: React.FC = () => {
     setLoading(false);
   };
 
+  const handleAnonymousLogin = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      await loginAnonymously();
+
+    } catch (error: any) {
+      let message = "Something went wrong. Please try again.";
+
+      switch (error.code) {
+        case "auth/operation-not-allowed":
+          message = "Anonymous login is not enabled.";
+          break;
+        case "auth/network-request-failed":
+          message = "Network error. Please check your internet connection.";
+          break;
+        default:
+          message = "Anonymous login failed. Please try again.";
+      }
+      setError(message);
+    }
+    setLoading(false);
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.formContainer}>
@@ -85,6 +109,24 @@ const Login: React.FC = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <div style={styles.divider}>
+        <span style={styles.dividerLine}></span>
+        <span style={styles.dividerText}>OR</span>
+        <span style={styles.dividerLine}></span>
+        </div>
+
+        <button
+          disabled={loading}
+          onClick={handleAnonymousLogin}
+          style={{ 
+            ...styles.button, 
+            marginTop: '10px', 
+            background: 'linear-gradient(to right, #7a35d5, #b84ef1)' 
+          }}
+        >
+          {loading ? 'Logging in...' : 'Continue as a Guest'}
+        </button>
         
         <p style={styles.linkText}>
           Don't have an account? <Link to="/register" style={styles.link}>Register here</Link>
@@ -104,23 +146,27 @@ const styles = {
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    fontFamily: '"Inter", sans-serif'
+    fontFamily: '"Inter", sans-serif',
+    padding: '20px'
   },
+
   formContainer: {
     backgroundColor: 'white',
-    padding: '40px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    padding: '40px 32px',
+    borderRadius: '16px',
+    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.1)',
     width: '100%',
     maxWidth: '400px'
   },
+
   title: {
     textAlign: 'center' as const,
-    marginBottom: '8px',
-    color: '#111',
-    fontSize: '26px',
-    fontWeight: 600
+    marginBottom: '6px',
+    color: '#1f1f1f',
+    fontSize: '28px',
+    fontWeight: 700
   },
+
   subtitle: {
     textAlign: 'center' as const,
     marginBottom: '24px',
@@ -128,57 +174,89 @@ const styles = {
     fontSize: '15px',
     fontWeight: 400 as const
   },
+
   form: {
     display: 'flex',
-    flexDirection: 'column' as const
+    flexDirection: 'column' as const,
+    gap: '16px',
   },
+
   inputGroup: {
-    marginBottom: '20px'
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '6px',
   },
+
   label: {
-    display: 'block',
-    marginBottom: '5px',
     color: '#333',
-    fontWeight: 'bold' as const
+    fontWeight: 600,
+    fontSize: '14px',
   },
+
   input: {
     width: '100%',
     padding: '12px',
     border: '1px solid #ccc',
-    borderRadius: '8px',
+    borderRadius: '10px',
     fontSize: '16px',
     boxSizing: 'border-box' as const,
     transition: 'border-color 0.2s, box-shadow 0.2s',
     outline: 'none' as const
   },
+
   button: {
+    width: '100%',
     background: 'linear-gradient(to right, #7a35d5, #b84ef1)',
-    color: 'white',
+    color: '#fff',
     padding: '12px',
     border: 'none',
-    borderRadius: '20px',
+    borderRadius: '999px',
     fontSize: '16px',
-    fontWeight: 500,
+    fontWeight: 600,
     cursor: 'pointer',
     transition: 'background-color 0.2s',
-    boxShadow: '0 2px 8px rgba(106, 17, 203, 0.2)'
+    boxShadow: '0 4px 10px rgba(106, 17, 203, 0.2)'
   },
   error: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
+    backgroundColor: '#fcebea',
+    color: '#cc1f1a',
     padding: '10px',
     borderRadius: '6px',
     marginBottom: '20px',
-    border: '1px solid #f5c6cb'
+    border: '1px solid #f5c6cb',
+    fontSize: '14px'
   },
+
   linkText: {
     textAlign: 'center' as const,
-    marginTop: '20px',
-    color: '#666'
+    marginTop: '24px',
+    fontSize: '14px',
+    color: '#555'
   },
+
   link: {
     color: '#7a35d5',
-    textDecoration: 'none'
+    textDecoration: 'none',
+    fontWeight: 500,
+  },
+
+  divider: {
+    display: 'flex',
+    alignItems: 'center',
+    margin: '24px 0 16px 0',
+    width: '100%',
+  },
+  dividerLine: {
+    flex: 1,
+    height: '1px',
+    backgroundColor: '#e0e0e0',
+  },
+  dividerText: {
+    margin: '0 12px',
+    color: '#888',
+    fontWeight: 500,
+    fontSize: '13px',
+    letterSpacing: '1px',
   }
 };
 
