@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { UserProfile } from '../types/User';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +10,6 @@ const Register: React.FC = () => {
     confirmPassword: '',
     subjectInterests: [] as string[],
     gradeLevel: '',
-    experience: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,15 +62,13 @@ const Register: React.FC = () => {
       setError('');
       setLoading(true);
 
-      const profile: UserProfile = {
+      await register(formData.email, formData.password, {
         name: formData.name,
         email: formData.email,
         subjectInterests: formData.subjectInterests,
         gradeLevel: formData.gradeLevel,
-        experience: formData.experience
-      };
+      });
 
-      await register(formData.email, formData.password, profile);
       navigate('/chat');
     } catch (error: any) {
       setError('Failed to create account: ' + (error.message || 'Unknown error'));
@@ -153,23 +149,6 @@ const Register: React.FC = () => {
               <option value="9-12">9-12 (High School)</option>
               <option value="College">College/University</option>
               <option value="Adult Education">Adult Education</option>
-            </select>
-          </div>
-
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Teaching Experience:</label>
-            <select
-              name="experience"
-              value={formData.experience}
-              onChange={handleInputChange}
-              required
-              style={styles.input}
-            >
-              <option value="">Select Experience Level</option>
-              <option value="New Teacher">New Teacher (0-2 years)</option>
-              <option value="Early Career">Early Career (3-5 years)</option>
-              <option value="Experienced">Experienced (6-15 years)</option>
-              <option value="Veteran">Veteran (16+ years)</option>
             </select>
           </div>
 

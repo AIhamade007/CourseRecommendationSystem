@@ -56,7 +56,6 @@ const Chat: React.FC = () => {
         name: currentUser.name,
         subjectInterests: currentUser.subjectInterests,
         gradeLevel: currentUser.gradeLevel,
-        experience: currentUser.experience
       };
 
       const response = await generateCourseRecommendation(inputMessage, userProfile);

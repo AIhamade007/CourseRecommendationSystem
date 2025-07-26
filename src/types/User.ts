@@ -4,7 +4,6 @@ export interface User {
   email: string;
   subjectInterests: string[];
   gradeLevel: string;
-  experience: string;
   createdAt: Date;
 }
 
@@ -13,7 +12,6 @@ export interface UserProfile {
   email: string;
   subjectInterests: string[];
   gradeLevel: string;
-  experience: string;
 }
 
 export interface ChatMessage {

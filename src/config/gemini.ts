@@ -13,20 +13,18 @@ export const generateCourseRecommendation = async (
     name: string;
     subjectInterests: string[];
     gradeLevel: string;
-    experience: string;
   }
 ) => {
   const systemPrompt = `You are a course recommendation assistant for teachers. 
   
-User Profile:
-- Name: ${userProfile.name}
-- Subject Interests: ${userProfile.subjectInterests.join(', ')}
-- Grade Level: ${userProfile.gradeLevel}
-- Teaching Experience: ${userProfile.experience}
+  User Profile:
+  - Name: ${userProfile.name}
+  - Subject Interests: ${userProfile.subjectInterests.join(', ')}
+  - Grade Level: ${userProfile.gradeLevel}
 
-You should provide personalized course recommendations, teaching strategies, and educational resources based on the user's profile and interests. Be helpful, professional, and focus on educational content that would benefit teachers in their subject areas and grade level.
+  You should provide personalized course recommendations and based on the user's profile and interests. Be helpful, professional, and focus on educational content that would benefit teachers in their subject areas and grade level.
 
-User Question: ${userMessage}`;
+  User Question: ${userMessage}`;
 
   try {
     const result = await model.generateContent(systemPrompt);
