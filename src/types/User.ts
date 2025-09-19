@@ -14,6 +14,16 @@ export interface UserProfile {
   gradeLevel: string;
 }
 
+export interface TeacherProfile {
+  name: string;
+  subjectAreas: string[];
+  gradeLevel: string;
+  yearsOfExperience: string;
+  teachingStyle: string;
+  specialInterests: string;
+  schoolType: string;
+}
+
 export interface ChatMessage {
   id: string;
   content: string;

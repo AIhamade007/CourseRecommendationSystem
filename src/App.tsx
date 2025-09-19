@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Welcome from './components/Welcome';
+import TeacherInfo from './components/TeacherInfo';
 import Register from './components/Register';
 import Chat from './components/Chat';
 
@@ -17,6 +18,7 @@ function App() {
             
             {/* Public routes */}
             <Route path="/welcome" element={<Welcome />} />
+            <Route path="/teacher-info" element={<TeacherInfo />} />
             <Route path="/register" element={<Register />} />
             
             {/* Protected routes */}

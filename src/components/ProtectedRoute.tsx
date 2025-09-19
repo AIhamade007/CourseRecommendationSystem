@@ -9,7 +9,28 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { currentUser } = useAuth();
 
-  return currentUser ? <>{children}</> : <Navigate to="/login" />;
+  // Check if user is authenticated
+  if (!currentUser) {
+    return <Navigate to="/welcome" />;
+  }
+
+  // Check if teacher info is completed
+  const teacherInfo = localStorage.getItem('teacherInfo');
+  if (!teacherInfo) {
+    return <Navigate to="/teacher-info" />;
+  }
+
+  // Parse and validate teacher info
+  try {
+    const parsedInfo = JSON.parse(teacherInfo);
+    if (!parsedInfo.subjectAreas || !parsedInfo.gradeLevel || !parsedInfo.yearsOfExperience) {
+      return <Navigate to="/teacher-info" />;
+    }
+  } catch {
+    return <Navigate to="/teacher-info" />;
+  }
+
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

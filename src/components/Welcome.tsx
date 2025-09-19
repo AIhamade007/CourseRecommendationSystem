@@ -13,7 +13,7 @@ const Welcome: React.FC = () => {
 
   useEffect(() => {
     if (currentUser) {
-      navigate('/chat');
+      navigate('/teacher-info');
     }
   }, [currentUser, navigate]);
 
@@ -108,8 +108,8 @@ const styles = {
   },
 
   avatar: {
-    width: '80px',
-    height: '80px',
+    width: '150px',
+    height: '150px',
     borderRadius: '50%',
     objectFit: 'cover' as const,
     border: '3px solid #7a35d5',

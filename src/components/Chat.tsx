@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { generateCourseRecommendation } from '../config/gemini';
-import { ChatMessage } from '../types/User';
+import { ChatMessage, TeacherProfile } from '../types/User';
 import chatBackgroundImage from './pics/GBG1.png';
 
 const Chat: React.FC = () => {
@@ -55,13 +55,19 @@ const Chat: React.FC = () => {
 
     try {
       const userName = localStorage.getItem('userName') || 'User';
-      const userProfile = {
+      const teacherInfo = JSON.parse(localStorage.getItem('teacherInfo') || '{}');
+      
+      const teacherProfile: TeacherProfile = {
         name: userName,
-        subjectInterests: currentUser.subjectInterests,
-        gradeLevel: currentUser.gradeLevel,
+        subjectAreas: teacherInfo.subjectAreas || [],
+        gradeLevel: teacherInfo.gradeLevel || '',
+        yearsOfExperience: teacherInfo.yearsOfExperience || '',
+        teachingStyle: teacherInfo.teachingStyle || '',
+        specialInterests: teacherInfo.specialInterests || '',
+        schoolType: teacherInfo.schoolType || ''
       };
 
-      const response = await generateCourseRecommendation(inputMessage, userProfile);
+      const response = await generateCourseRecommendation(inputMessage, teacherProfile);
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
