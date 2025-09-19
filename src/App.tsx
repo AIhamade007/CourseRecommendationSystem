@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Login from './components/Login';
+import Welcome from './components/Welcome';
 import Register from './components/Register';
 import Chat from './components/Chat';
 
@@ -12,11 +12,11 @@ function App() {
       <AuthProvider>
         <div className="App">
           <Routes>
-            {/* Default route redirects to login */}
-            <Route path="/" element={<Navigate to="/login" />} />
+            {/* Default route redirects to welcome */}
+            <Route path="/" element={<Navigate to="/welcome" />} />
             
             {/* Public routes */}
-            <Route path="/login" element={<Login />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/register" element={<Register />} />
             
             {/* Protected routes */}
@@ -30,7 +30,7 @@ function App() {
             />
             
             {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/login" />} />
+            <Route path="*" element={<Navigate to="/welcome" />} />
           </Routes>
         </div>
       </AuthProvider>

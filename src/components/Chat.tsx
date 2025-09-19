@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { generateCourseRecommendation } from '../config/gemini';
 import { ChatMessage } from '../types/User';
+import chatBackgroundImage from './pics/GBG1.png';
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -25,9 +26,10 @@ const Chat: React.FC = () => {
   useEffect(() => {
     // Welcome message when component mounts
     if (currentUser && messages.length === 0) {
+      const userName = localStorage.getItem('userName') || 'User';
       const welcomeMessage: ChatMessage = {
         id: Date.now().toString(),
-        content: `Hello ${currentUser.name}! I'm your course recommendation assistant. How can I help you today?`,
+        content: `Hello ${userName}! I'm your course recommendation assistant. How can I help you today?`,
         isUser: false,
         timestamp: new Date()
       };
@@ -52,8 +54,9 @@ const Chat: React.FC = () => {
     setLoading(true);
 
     try {
+      const userName = localStorage.getItem('userName') || 'User';
       const userProfile = {
-        name: currentUser.name,
+        name: userName,
         subjectInterests: currentUser.subjectInterests,
         gradeLevel: currentUser.gradeLevel,
       };
@@ -99,7 +102,7 @@ const Chat: React.FC = () => {
         <div style={styles.userInfo}>
           <h2 style={styles.title}>Course Recommendation Chat</h2>
           <p style={styles.userDetails}>
-            Welcome, {currentUser.name} 
+            Welcome, {localStorage.getItem('userName') || 'User'} 
           </p>
         </div>
         <button onClick={handleLogout} style={styles.logoutButton}>
@@ -235,7 +238,7 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column' as const,
-    backgroundImage: 'url("/GBG1.png")',
+    backgroundImage: `url(${chatBackgroundImage})`,
     backgroundSize: 'cover',
     backgroundRepeat: 'repeat', 
     backgroundPosition: 'center',
