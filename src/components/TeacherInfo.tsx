@@ -5,23 +5,21 @@ import backgroundImage from './pics/smsm.jpg';
 
 interface TeacherData {
   name: string;
-  subjectAreas: string[];
-  gradeLevel: string;
-  yearsOfExperience: string;
-  teachingStyle: string;
+  subjectArea: string;
   specialInterests: string;
   schoolType: string;
+  educationLevels: string[];
+  language: string;
 }
 
 const TeacherInfo: React.FC = () => {
   const [teacherData, setTeacherData] = useState<TeacherData>({
     name: '',
-    subjectAreas: [],
-    gradeLevel: '',
-    yearsOfExperience: '',
-    teachingStyle: '',
+    subjectArea: '',
     specialInterests: '',
-    schoolType: ''
+    schoolType: '',
+    educationLevels: [],
+    language: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -38,27 +36,35 @@ const TeacherInfo: React.FC = () => {
     // Check if teacher info already exists
     const existingInfo = localStorage.getItem('teacherInfo');
     if (existingInfo) {
-      setTeacherData(JSON.parse(existingInfo));
+      const info = JSON.parse(existingInfo);
+      // Remove yearsOfExperience and teachingStyle if present from old data
+      // Convert old subjectAreas array to single subjectArea string
+      const { yearsOfExperience, teachingStyle, subjectAreas, gradeLevel, ...cleanedInfo } = info;
+      const updatedInfo = {
+        ...cleanedInfo,
+        subjectArea: subjectAreas ? subjectAreas.join(', ') : info.subjectArea || ''
+      };
+      setTeacherData(prev => ({ ...prev, ...updatedInfo }));
     }
   }, []);
-
-  const handleSubjectChange = (subject: string) => {
-    setTeacherData(prev => ({
-      ...prev,
-      subjectAreas: prev.subjectAreas.includes(subject)
-        ? prev.subjectAreas.filter(s => s !== subject)
-        : [...prev.subjectAreas, subject]
-    }));
-  };
 
   const handleInputChange = (field: keyof TeacherData, value: string) => {
     setTeacherData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleEducationLevelChange = (level: string) => {
+    setTeacherData(prev => ({
+      ...prev,
+      educationLevels: prev.educationLevels.includes(level)
+        ? prev.educationLevels.filter(l => l !== level)
+        : [...prev.educationLevels, level]
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!teacherData.subjectAreas.length || !teacherData.gradeLevel || !teacherData.yearsOfExperience) {
+    if (!teacherData.subjectArea.trim() || !teacherData.schoolType) {
       alert('אנא מלאו את כל השדות הנדרשים');
       return;
     }
@@ -77,30 +83,8 @@ const TeacherInfo: React.FC = () => {
     }
   };
 
-  const subjects = [
-    'מתמטיקה', 'אנגלית', 'עברית', 'היסטוריה', 'גיאוגרפיה', 
-    'מדעים', 'פיזיקה', 'כימיה', 'ביולוגיה', 'מחשבים', 
-    'אמנות', 'מוזיקה', 'ספורט', 'ספרות', 'פילוסופיה'
-  ];
-
-  const gradeLevels = [
-    'גן ילדים', 'כיתות א׳-ב׳', 'כיתות ג׳-ו׳', 
-    'כיתות ז׳-ט׳', 'כיתות י׳-יב׳', 'השכלה גבוהה'
-  ];
-
-  const experienceLevels = [
-    'מורה חדש (0-2 שנים)', '3-5 שנים', '6-10 שנים', 
-    '11-15 שנים', '16-20 שנים', 'מעל 20 שנה'
-  ];
-
-  const teachingStyles = [
-    'למידה אינטראקטיבית', 'למידה מבוססת פרויקטים', 'הרצאות מובנות',
-    'למידה חוויתית', 'למידה משתפת', 'למידה מותאמת אישית'
-  ];
-
   const schoolTypes = [
-    'בית ספר יסודי ממלכתי', 'בית ספר יסודי דתי', 'חטיבת ביניים',
-    'תיכון כללי', 'תיכון טכנולוגי', 'מכללה/אוניברסיטה'
+    'יהודי', "בדואי", "ערבי", "דרוזי", "צרקסי", "אחר"
   ];
 
   return (
@@ -112,83 +96,65 @@ const TeacherInfo: React.FC = () => {
         </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
-          {/* Subject Areas */}
+          {/* Subject Area */}
           <div style={styles.section}>
-            <label style={styles.sectionTitle}>אילו מקצועות אתה מלמד? *</label>
-            <div style={styles.checkboxGrid}>
-              {subjects.map(subject => (
-                <label key={subject} style={styles.checkboxItem}>
+            <label style={styles.sectionTitle}>איזה מקצוע אתה מלמד? *</label>
+            <input
+              type="text"
+              value={teacherData.subjectArea}
+              onChange={(e) => handleInputChange('subjectArea', e.target.value)}
+              placeholder="למשל: מתמטיקה, אנגלית, מורה בכיתה..."
+              style={styles.input}
+              required
+            />
+          </div>
+
+          {/* School Type */}
+          <div style={styles.section}>
+            <label style={styles.sectionTitle}>איזה מגזר בית ספר אתה מלמד? *</label>
+            <select
+              value={teacherData.schoolType}
+              onChange={(e) => handleInputChange('schoolType', e.target.value)}
+              style={styles.select}
+              required
+            >
+              <option value="">בחר מגזר</option>
+              {schoolTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Education Levels */}
+          <div style={styles.section}>
+            <label style={styles.sectionTitle}>רמות חינוך:</label>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-start', direction: 'rtl', marginTop: '10px', flexWrap: 'wrap' }}>
+              {['ממלכתי', 'ממלכתי דתי', 'חרדי', 'על יסודי', 'יסודי'].map(level => (
+                <label key={level} style={{ display: 'flex', alignItems: 'center', direction: 'rtl', fontSize: '16px' }}>
                   <input
                     type="checkbox"
-                    checked={teacherData.subjectAreas.includes(subject)}
-                    onChange={() => handleSubjectChange(subject)}
-                    style={styles.checkbox}
+                    checked={teacherData.educationLevels.includes(level)}
+                    onChange={() => handleEducationLevelChange(level)}
+                    style={{ marginLeft: '8px' }}
                   />
-                  {subject}
+                  {level}
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Grade Level */}
+          {/* Language */}
           <div style={styles.section}>
-            <label style={styles.sectionTitle}>באיזה רמת כיתה אתה מלמד? *</label>
+            <label style={styles.sectionTitle}>שפת הוראה: *</label>
             <select
-              value={teacherData.gradeLevel}
-              onChange={(e) => handleInputChange('gradeLevel', e.target.value)}
+              value={teacherData.language}
+              onChange={(e) => handleInputChange('language', e.target.value)}
               style={styles.select}
               required
             >
-              <option value="">בחר רמת כיתה</option>
-              {gradeLevels.map(level => (
-                <option key={level} value={level}>{level}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Years of Experience */}
-          <div style={styles.section}>
-            <label style={styles.sectionTitle}>כמה שנות ניסיון יש לך בהוראה? *</label>
-            <select
-              value={teacherData.yearsOfExperience}
-              onChange={(e) => handleInputChange('yearsOfExperience', e.target.value)}
-              style={styles.select}
-              required
-            >
-              <option value="">בחר שנות ניסיון</option>
-              {experienceLevels.map(level => (
-                <option key={level} value={level}>{level}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Teaching Style */}
-          <div style={styles.section}>
-            <label style={styles.sectionTitle}>מה הסגנון ההוראה המועדף עליך?</label>
-            <select
-              value={teacherData.teachingStyle}
-              onChange={(e) => handleInputChange('teachingStyle', e.target.value)}
-              style={styles.select}
-            >
-              <option value="">בחר סגנון הוראה</option>
-              {teachingStyles.map(style => (
-                <option key={style} value={style}>{style}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* School Type */}
-          <div style={styles.section}>
-            <label style={styles.sectionTitle}>באיזה סוג בית ספר אתה מלמד?</label>
-            <select
-              value={teacherData.schoolType}
-              onChange={(e) => handleInputChange('schoolType', e.target.value)}
-              style={styles.select}
-            >
-              <option value="">בחר סוג בית ספר</option>
-              {schoolTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
+              <option value="">בחר שפה</option>
+              <option value="עברית">עברית</option>
+              <option value="ערבית">ערבית</option>
             </select>
           </div>
 
@@ -206,11 +172,11 @@ const TeacherInfo: React.FC = () => {
 
           <button 
             type="submit" 
-            disabled={loading || !teacherData.subjectAreas.length || !teacherData.gradeLevel || !teacherData.yearsOfExperience}
+            disabled={loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language}
             style={{
               ...styles.button,
-              opacity: (loading || !teacherData.subjectAreas.length || !teacherData.gradeLevel || !teacherData.yearsOfExperience) ? 0.6 : 1,
-              cursor: (loading || !teacherData.subjectAreas.length || !teacherData.gradeLevel || !teacherData.yearsOfExperience) ? 'not-allowed' : 'pointer'
+              opacity: (loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language) ? 0.6 : 1,
+              cursor: (loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language) ? 'not-allowed' : 'pointer'
             }}
           >
             {loading ? 'שומר...' : 'המשך לצ\'אט'}
@@ -287,27 +253,17 @@ const styles = {
     fontSize: '16px'
   },
 
-  checkboxGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-    gap: '8px'
-  },
-
-  checkboxItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 12px',
-    border: '1px solid #e0e0e0',
+  input: {
+    width: '100%',
+    padding: '12px 16px',
+    border: '2px solid #e0e0e0',
     borderRadius: '8px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    fontSize: '14px'
-  },
-
-  checkbox: {
-    margin: 0,
-    cursor: 'pointer'
+    fontSize: '16px',
+    fontFamily: '"Inter", "Noto Sans Hebrew", Arial, sans-serif',
+    direction: 'rtl' as const,
+    textAlign: 'right' as const,
+    background: '#fafafa',
+    boxSizing: 'border-box' as const
   },
 
   select: {
@@ -354,12 +310,7 @@ const styles = {
 
 // Add hover styles
 const hoverStyles = `
-  .checkbox-item:hover {
-    background-color: #f8f9ff !important;
-    border-color: #7a35d5 !important;
-  }
-  
-  select:focus, textarea:focus {
+  input:focus, select:focus, textarea:focus {
     border-color: #7a35d5 !important;
     box-shadow: 0 0 0 3px rgba(122, 53, 213, 0.1) !important;
     background: white !important;

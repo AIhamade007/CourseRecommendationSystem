@@ -23,7 +23,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Parse and validate teacher info
   try {
     const parsedInfo = JSON.parse(teacherInfo);
-    if (!parsedInfo.subjectAreas || !parsedInfo.gradeLevel || !parsedInfo.yearsOfExperience) {
+    if (!parsedInfo.subjectArea || !parsedInfo.schoolType) {
       return <Navigate to="/teacher-info" />;
     }
   } catch {

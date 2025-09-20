@@ -24,12 +24,28 @@ const Chat: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
+    // Clear user data when browser tab is closed or user navigates away
+    const handleBeforeUnload = () => {
+      localStorage.removeItem('userName');
+      localStorage.removeItem('teacherInfo');
+      localStorage.removeItem('userProfile');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
     // Welcome message when component mounts
     if (currentUser && messages.length === 0) {
-      const userName = localStorage.getItem('userName') || 'User';
+      const userName = localStorage.getItem('userName') || 'משתמש';
       const welcomeMessage: ChatMessage = {
         id: Date.now().toString(),
-        content: `Hello ${userName}! I'm your course recommendation assistant. How can I help you today?`,
+        content: `שלום ${userName}! אני העוזר שלך להמלצות קורסים. איך אני יכול לעזור לך היום?`,
         isUser: false,
         timestamp: new Date()
       };
@@ -59,12 +75,10 @@ const Chat: React.FC = () => {
       
       const teacherProfile: TeacherProfile = {
         name: userName,
-        subjectAreas: teacherInfo.subjectAreas || [],
-        gradeLevel: teacherInfo.gradeLevel || '',
-        yearsOfExperience: teacherInfo.yearsOfExperience || '',
-        teachingStyle: teacherInfo.teachingStyle || '',
+        subjectArea: teacherInfo.subjectArea || teacherInfo.subjectAreas?.join(', ') || '',
         specialInterests: teacherInfo.specialInterests || '',
-        schoolType: teacherInfo.schoolType || ''
+        schoolType: teacherInfo.schoolType || '',
+        language: teacherInfo.language || 'עברית'
       };
 
       const response = await generateCourseRecommendation(inputMessage, teacherProfile);
@@ -78,13 +92,28 @@ const Chat: React.FC = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
-      const errorMessage: ChatMessage = {
+      console.error('Chat error details:', error);
+      
+      let errorMessage = 'Sorry, I encountered an error while processing your request. Please try again.';
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          errorMessage = 'שגיאת מפתח API. אנא בדוק את הגדרות Gemini API.';
+        } else if (error.message.includes('quota')) {
+          errorMessage = 'חריגה ממכסת API. אנא בדוק את מגבלות השימוש שלך ב-Gemini API.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'שגיאת רשת. אנא בדוק את החיבור לאינטרנט ונסה שוב.';
+        }
+      }
+      
+      const errorMessageObj: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: 'Sorry, I encountered an error while processing your request. Please try again.',
+        content: errorMessage,
         isUser: false,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorMessageObj]);
     }
 
     setLoading(false);
@@ -92,6 +121,11 @@ const Chat: React.FC = () => {
 
   const handleLogout = async () => {
     try {
+      // Clear all saved user information from localStorage
+      localStorage.removeItem('userName');
+      localStorage.removeItem('teacherInfo');
+      localStorage.removeItem('userProfile');
+      
       await logout();
     } catch (error) {
       console.error('Failed to log out:', error);
@@ -99,20 +133,20 @@ const Chat: React.FC = () => {
   };
 
   if (!currentUser) {
-    return <div>Loading...</div>;
+    return <div>טוען...</div>;
   }
 
   return (
     <div style={styles.container}>
       <header style={styles.header}>
         <div style={styles.userInfo}>
-          <h2 style={styles.title}>Course Recommendation Chat</h2>
+          <h2 style={styles.title}>צ'אט המלצות קורסים</h2>
           <p style={styles.userDetails}>
-            Welcome, {localStorage.getItem('userName') || 'User'} 
+            ברוך הבא, {localStorage.getItem('userName') || 'משתמש'} 
           </p>
         </div>
         <button onClick={handleLogout} style={styles.logoutButton}>
-          Logout
+          התנתקות
         </button>
       </header>
 
@@ -163,7 +197,7 @@ const Chat: React.FC = () => {
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Ask me about courses, professional development, or teaching resources..."
+            placeholder="שאל אותי על קורסים, פיתוח מקצועי או משאבי הוראה..."
             style={styles.input}
             disabled={loading}
           />
@@ -178,7 +212,7 @@ const Chat: React.FC = () => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            Send
+            שלח
           </button>
         </form>
       </div>
@@ -191,8 +225,9 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     height: '100vh',
-    fontFamily: "'Inter', sans-serif",
-    overflow: 'hidden' // <-- Add this
+    fontFamily: "'Inter', 'Noto Sans Hebrew', Arial, sans-serif",
+    overflow: 'hidden',
+    direction: 'rtl' as const
   },
   header: {
     position: 'fixed' as 'fixed',
@@ -279,7 +314,9 @@ const styles = {
   messageContent: {
     fontSize: '14px',
     lineHeight: '1.4',
-    whiteSpace: 'pre-wrap' as const
+    whiteSpace: 'pre-wrap' as const,
+    direction: 'rtl' as const,
+    textAlign: 'right' as const
   },
   timestamp: {
     fontSize: '11px',
@@ -325,9 +362,11 @@ const styles = {
     borderRadius: '999px',
     fontSize: '15px',
     outline: 'none',
-    marginRight: '12px',
+    marginLeft: '12px',
     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
-    transition: 'border-color 0.2s ease'
+    transition: 'border-color 0.2s ease',
+    direction: 'rtl' as const,
+    textAlign: 'right' as const
   },
   sendButton: {
     backgroundImage: 'linear-gradient(to right, #7a35d5, #b84ef1)',

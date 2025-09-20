@@ -16,12 +16,10 @@ export interface UserProfile {
 
 export interface TeacherProfile {
   name: string;
-  subjectAreas: string[];
-  gradeLevel: string;
-  yearsOfExperience: string;
-  teachingStyle: string;
+  subjectArea: string;
   specialInterests: string;
   schoolType: string;
+  language: string;
 }
 
 export interface ChatMessage {
