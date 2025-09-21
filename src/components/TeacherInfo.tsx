@@ -75,8 +75,8 @@ const TeacherInfo: React.FC = () => {
       // Store teacher information in localStorage
       localStorage.setItem('teacherInfo', JSON.stringify(teacherData));
       
-      // Navigate to chat
-      navigate('/chat');
+      // Navigate to course selection
+      navigate('/course-selection');
     } catch (error) {
       console.error('Failed to save teacher info:', error);
       setLoading(false);
@@ -179,7 +179,7 @@ const TeacherInfo: React.FC = () => {
               cursor: (loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language) ? 'not-allowed' : 'pointer'
             }}
           >
-            {loading ? 'שומר...' : 'המשך לצ\'אט'}
+            {loading ? 'שומר...' : 'המשך לבחירת קורסים'}
           </button>
         </form>
       </div>

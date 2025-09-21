@@ -20,6 +20,7 @@ export interface TeacherProfile {
   specialInterests: string;
   schoolType: string;
   language: string;
+  previousCourses?: string[];
 }
 
 export interface ChatMessage {

@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Welcome from './components/Welcome';
 import TeacherInfo from './components/TeacherInfo';
+import CourseSelection from './components/CourseSelection';
 import Register from './components/Register';
 import Chat from './components/Chat';
 
@@ -19,6 +20,7 @@ function App() {
             {/* Public routes */}
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/teacher-info" element={<TeacherInfo />} />
+            <Route path="/course-selection" element={<CourseSelection />} />
             <Route path="/register" element={<Register />} />
             
             {/* Protected routes */}

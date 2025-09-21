@@ -35,6 +35,11 @@ export const generateCourseRecommendation = async (
   userMessage: string,
   teacherProfile: TeacherProfile
 ) => {
+  // Format previous courses for display
+  const previousCoursesText = teacherProfile.previousCourses && teacherProfile.previousCourses.length > 0 
+    ? teacherProfile.previousCourses.join(', ')
+    : 'לא צוינו קורסים קודמים';
+
   const systemPrompt = `You are a course recommendation assistant for teachers. Please respond in Hebrew.
   
   פרופיל המורה:
@@ -43,8 +48,15 @@ export const generateCourseRecommendation = async (
   - תחומי עניין מיוחדים: ${teacherProfile.specialInterests}
   - מגזר: ${teacherProfile.schoolType}
   - שפת בית הספר: ${teacherProfile.language}
+  - קורסים שהמורה השתתף בהם בעבר: ${previousCoursesText}
 
-  אתה צריך לספק המלצות קורסים מותאמות אישית והצעות חינוכיות על בסיס הפרופיל של המורה. היה מועיל, מקצועי, והתמקד בתוכן חינוכי שיועיל למורים בתחום ההוראה שלהם. קח בחשבון את המגזר שבו המורה עובד כדי לתת המלצות רלוונטיות תרבותית.
+  אתה צריך לספק המלצות קורסים מותאמות אישית והצעות חינוכיות על בסיס הפרופיל של המורה. היה מועיל, מקצועי, והתמקד בתוכן חינוכי שיועיל למורים בתחום ההוראה שלהם. 
+  
+  הנחיות חשובות:
+  1. קח בחשבון את הקורסים שהמורה כבר השתתף בהם כדי להמליץ על קורסים משלימים או מתקדמים יותר
+  2. הימנע מהמלצה על קורסים שהמורה כבר השתתף בהם, אלא אם כן מדובר בקורסי המשך או רמה מתקדמת
+  3. קח בחשבון את המגזר שבו המורה עובד כדי לתת המלצות רלוונטיות תרבותית
+  4. התמקד בקורסים שיתרמו לפיתוח המקצועי של המורה בתחום ההוראה שלו
   
   ענה בעברית, בצורה ברורה ומפורטת.
 

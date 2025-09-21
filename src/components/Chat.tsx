@@ -29,6 +29,7 @@ const Chat: React.FC = () => {
       localStorage.removeItem('userName');
       localStorage.removeItem('teacherInfo');
       localStorage.removeItem('userProfile');
+      localStorage.removeItem('selectedCourses');
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -72,13 +73,15 @@ const Chat: React.FC = () => {
     try {
       const userName = localStorage.getItem('userName') || 'User';
       const teacherInfo = JSON.parse(localStorage.getItem('teacherInfo') || '{}');
+      const selectedCourses = JSON.parse(localStorage.getItem('selectedCourses') || '[]');
       
       const teacherProfile: TeacherProfile = {
         name: userName,
         subjectArea: teacherInfo.subjectArea || teacherInfo.subjectAreas?.join(', ') || '',
         specialInterests: teacherInfo.specialInterests || '',
         schoolType: teacherInfo.schoolType || '',
-        language: teacherInfo.language || 'עברית'
+        language: teacherInfo.language || 'עברית',
+        previousCourses: selectedCourses
       };
 
       const response = await generateCourseRecommendation(inputMessage, teacherProfile);
@@ -125,6 +128,7 @@ const Chat: React.FC = () => {
       localStorage.removeItem('userName');
       localStorage.removeItem('teacherInfo');
       localStorage.removeItem('userProfile');
+      localStorage.removeItem('selectedCourses');
       
       await logout();
     } catch (error) {
