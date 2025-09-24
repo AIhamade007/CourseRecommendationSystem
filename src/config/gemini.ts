@@ -1,17 +1,18 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { TeacherProfile } from '../types/User';
 
-// Replace with your actual Gemini API key
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY || 'AIzaSyBqJHeeP1toK3eFFAzNJDFufutMzCPvgGo';
+// Get API key from environment variables
+const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
 
 console.log('API Key loaded:', API_KEY ? 'API Key present' : 'No API Key');
 console.log('API Key starts with:', API_KEY ? API_KEY.substring(0, 10) + '...' : 'N/A');
 
 if (!API_KEY || API_KEY === 'your-api-key-here') {
-  console.error('Gemini API key is not properly configured');
-} else {
-  console.log('API Key appears to be configured');
+  console.error('Gemini API key is not properly configured. Please check your .env file.');
+  throw new Error('REACT_APP_GEMINI_API_KEY is not configured in environment variables');
 }
+
+console.log('API Key appears to be configured');
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
@@ -80,6 +81,18 @@ export const generateCourseRecommendation = async (
       teacherProfile,
       userMessage
     });
+
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        throw new Error('שגיאה במפתח API. אנא בדוק את ההגדרות.');
+      } else if (error.message.includes('quota') || error.message.includes('limit')) {
+        throw new Error('חריגה ממכסת השימוש ב-API. אנא נסה שוב מאוחר יותר.');
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        throw new Error('שגיאת רשת. אנא בדוק את החיבור לאינטרנט.');
+      }
+    }
+    
     throw new Error('נכשל ביצירת תגובה. אנא נסה שוב.');
   }
 };
