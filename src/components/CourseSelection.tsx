@@ -12,6 +12,8 @@ interface Course {
 const CourseSelection: React.FC = () => {
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<string>('הכל');
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -111,6 +113,42 @@ const CourseSelection: React.FC = () => {
     navigate('/chat');
   };
 
+  // Get all available filter categories
+  const filterCategories = ['הכל', ...Object.keys(courseCategories)];
+
+  // Filter courses based on search term and selected filter
+  const getFilteredCourses = () => {
+    let filteredCategories: Record<string, Course[]> = { ...courseCategories };
+
+    // Apply category filter
+    if (selectedFilter !== 'הכל') {
+      const selectedCategory = courseCategories[selectedFilter as keyof typeof courseCategories];
+      if (selectedCategory) {
+        filteredCategories = {
+          [selectedFilter]: selectedCategory
+        };
+      }
+    }
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchResults: Record<string, Course[]> = {};
+      Object.entries(filteredCategories).forEach(([categoryName, courses]) => {
+        const matchingCourses = courses.filter(course =>
+          course.name.includes(searchTerm.trim())
+        );
+        if (matchingCourses.length > 0) {
+          searchResults[categoryName] = matchingCourses;
+        }
+      });
+      return searchResults;
+    }
+
+    return filteredCategories;
+  };
+
+  const filteredCourseCategories = getFilteredCourses();
+
   return (
     <div style={styles.container} dir="rtl">
       <div style={styles.formContainer}>
@@ -119,25 +157,94 @@ const CourseSelection: React.FC = () => {
           באילו קורסים השתתפת בעבר? זה יעזור לנו לתת לך המלצות מותאמות יותר
         </p>
 
+        {/* Top Controls */}
+        <div style={styles.topControls}>
+          {/* Search Bar */}
+          <div style={styles.searchContainer}>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="חפש קורס..."
+              style={styles.searchInput}
+            />
+          </div>
+
+          {/* Filter Dropdown */}
+          <div style={styles.filterContainer}>
+            <select
+              value={selectedFilter}
+              onChange={(e) => setSelectedFilter(e.target.value)}
+              style={styles.filterSelect}
+            >
+              {filterCategories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={styles.topButtonContainer}>
+            <button 
+              type="button" 
+              onClick={handleSkip}
+              className="top-skip-button"
+              style={styles.topSkipButton}
+            >
+              דלג
+            </button>
+            <button 
+              type="button" 
+              onClick={handleSubmit}
+              disabled={loading}
+              className="top-continue-button"
+              style={{
+                ...styles.topContinueButton,
+                opacity: loading ? 0.6 : 1,
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {loading ? 'שומר...' : 'המשך'}
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} style={styles.form}>
-          {Object.entries(courseCategories).map(([categoryName, courses]) => (
-            <div key={categoryName} style={styles.categorySection}>
-              <h3 style={styles.categoryTitle}>{categoryName}</h3>
-              <div style={styles.coursesGrid}>
-                {courses.map(course => (
-                  <label key={course.id} style={styles.courseLabel}>
-                    <input
-                      type="checkbox"
-                      checked={selectedCourses.includes(course.id)}
-                      onChange={() => handleCourseToggle(course.id)}
-                      style={styles.checkbox}
-                    />
-                    <span style={styles.courseName}>{course.name}</span>
-                  </label>
-                ))}
-              </div>
+          {Object.keys(filteredCourseCategories).length === 0 ? (
+            <div style={styles.noResults}>
+              <p style={styles.noResultsText}>לא נמצאו קורסים המתאימים לחיפוש</p>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedFilter('הכל');
+                }}
+                className="clear-filters-button"
+                style={styles.clearFiltersButton}
+              >
+                נקה חיפוש
+              </button>
             </div>
-          ))}
+          ) : (
+            Object.entries(filteredCourseCategories).map(([categoryName, courses]) => (
+              <div key={categoryName} style={styles.categorySection}>
+                <h3 style={styles.categoryTitle}>{categoryName}</h3>
+                <div style={styles.coursesGrid}>
+                  {courses.map(course => (
+                    <label key={course.id} style={styles.courseLabel}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCourses.includes(course.id)}
+                        onChange={() => handleCourseToggle(course.id)}
+                        style={styles.checkbox}
+                      />
+                      <span style={styles.courseName}>{course.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
 
           <div style={styles.selectedInfo}>
             <p style={styles.selectedText}>
@@ -312,6 +419,113 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     boxShadow: '0 4px 15px rgba(106, 17, 203, 0.3)'
+  },
+
+  topControls: {
+    display: 'flex',
+    flexDirection: 'row' as const,
+    gap: '16px',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '20px 0',
+    borderBottom: '2px solid #e0e0e0',
+    marginBottom: '24px',
+    flexWrap: 'wrap' as const
+  },
+
+  searchContainer: {
+    flex: '1',
+    minWidth: '200px'
+  },
+
+  searchInput: {
+    width: '100%',
+    padding: '12px 16px',
+    border: '2px solid #e0e0e0',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontFamily: '"Inter", "Noto Sans Hebrew", Arial, sans-serif',
+    direction: 'rtl' as const,
+    textAlign: 'right' as const,
+    background: '#fafafa',
+    boxSizing: 'border-box' as const
+  },
+
+  filterContainer: {
+    minWidth: '150px'
+  },
+
+  filterSelect: {
+    width: '100%',
+    padding: '12px 16px',
+    border: '2px solid #e0e0e0',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontFamily: '"Inter", "Noto Sans Hebrew", Arial, sans-serif',
+    direction: 'rtl' as const,
+    textAlign: 'right' as const,
+    background: '#fafafa',
+    cursor: 'pointer'
+  },
+
+  topButtonContainer: {
+    display: 'flex',
+    gap: '12px',
+    minWidth: 'fit-content'
+  },
+
+  topSkipButton: {
+    padding: '12px 20px',
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    whiteSpace: 'nowrap' as const
+  },
+
+  topContinueButton: {
+    padding: '12px 20px',
+    background: 'linear-gradient(to right, #7a35d5, #b84ef1)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(106, 17, 203, 0.3)',
+    whiteSpace: 'nowrap' as const
+  },
+
+  noResults: {
+    textAlign: 'center' as const,
+    padding: '40px 20px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '12px',
+    border: '2px dashed #dee2e6'
+  },
+
+  noResultsText: {
+    color: '#6c757d',
+    fontSize: '18px',
+    fontWeight: 500,
+    marginBottom: '16px'
+  },
+
+  clearFiltersButton: {
+    padding: '10px 20px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
   }
 };
 
@@ -334,6 +548,27 @@ const hoverStyles = `
   .submit-button:hover:not(:disabled) {
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4) !important;
+  }
+
+  input:focus, select:focus {
+    border-color: #7a35d5 !important;
+    box-shadow: 0 0 0 3px rgba(122, 53, 213, 0.1) !important;
+    background: white !important;
+  }
+
+  .top-skip-button:hover {
+    background-color: #5a6268 !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .top-continue-button:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4) !important;
+  }
+
+  .clear-filters-button:hover {
+    background-color: #0056b3 !important;
+    transform: translateY(-1px) !important;
   }
 `;
 
