@@ -46,7 +46,6 @@ export const generateCourseRecommendation = async (
   פרופיל המורה:
   - שם: ${teacherProfile.name}
   - מקצוע הוראה: ${teacherProfile.subjectArea}
-  - תחומי עניין מיוחדים: ${teacherProfile.specialInterests}
   - מגזר: ${teacherProfile.schoolType}
   - שפת בית הספר: ${teacherProfile.language}
   - קורסים שהמורה השתתף בהם בעבר: ${previousCoursesText}

@@ -78,7 +78,6 @@ const Chat: React.FC = () => {
       const teacherProfile: TeacherProfile = {
         name: userName,
         subjectArea: teacherInfo.subjectArea || teacherInfo.subjectAreas?.join(', ') || '',
-        specialInterests: teacherInfo.specialInterests || '',
         schoolType: teacherInfo.schoolType || '',
         language: teacherInfo.language || 'עברית',
         previousCourses: selectedCourses

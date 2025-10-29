@@ -17,7 +17,6 @@ export interface UserProfile {
 export interface TeacherProfile {
   name: string;
   subjectArea: string;
-  specialInterests: string;
   schoolType: string;
   language: string;
   previousCourses?: string[];

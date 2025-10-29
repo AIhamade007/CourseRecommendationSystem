@@ -6,7 +6,6 @@ import backgroundImage from './pics/smsm.jpg';
 interface TeacherData {
   name: string;
   subjectArea: string;
-  specialInterests: string;
   schoolType: string;
   educationLevels: string[];
   language: string;
@@ -16,7 +15,6 @@ const TeacherInfo: React.FC = () => {
   const [teacherData, setTeacherData] = useState<TeacherData>({
     name: '',
     subjectArea: '',
-    specialInterests: '',
     schoolType: '',
     educationLevels: [],
     language: ''
@@ -37,9 +35,9 @@ const TeacherInfo: React.FC = () => {
     const existingInfo = localStorage.getItem('teacherInfo');
     if (existingInfo) {
       const info = JSON.parse(existingInfo);
-      // Remove yearsOfExperience and teachingStyle if present from old data
+      // Remove yearsOfExperience, teachingStyle, and specialInterests if present from old data
       // Convert old subjectAreas array to single subjectArea string
-      const { yearsOfExperience, teachingStyle, subjectAreas, gradeLevel, ...cleanedInfo } = info;
+      const { yearsOfExperience, teachingStyle, subjectAreas, gradeLevel, specialInterests, ...cleanedInfo } = info;
       const updatedInfo = {
         ...cleanedInfo,
         subjectArea: subjectAreas ? subjectAreas.join(', ') : info.subjectArea || ''
@@ -156,18 +154,6 @@ const TeacherInfo: React.FC = () => {
               <option value="עברית">עברית</option>
               <option value="ערבית">ערבית</option>
             </select>
-          </div>
-
-          {/* Special Interests */}
-          <div style={styles.section}>
-            <label style={styles.sectionTitle}>תחומי עניין מיוחדים או התמחויות</label>
-            <textarea
-              value={teacherData.specialInterests}
-              onChange={(e) => handleInputChange('specialInterests', e.target.value)}
-              placeholder="למשל: טכנולוגיה בחינוך, חינוך מיוחד, מחוננים..."
-              style={styles.textarea}
-              rows={3}
-            />
           </div>
 
           <button 

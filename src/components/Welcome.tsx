@@ -41,17 +41,17 @@ const Welcome: React.FC = () => {
         </div>
         <h1 style={styles.title}>ברוכים הבאים!</h1>
         <p style={styles.subtitle}>
-          הזינו את שמכם כדי להתחיל לצ'טט עם עוזר המלצות הקורסים שלנו
+        הזן את שמך כדי להתחיל לדבר עם עוזר המלצות הקורסים שלנו.
         </p>
         
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>השם שלכם:</label>
+            <label style={styles.label}>השם שלך:</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="הזינו את שמכם כאן..."
+              placeholder="הזין את שמך כאן..."
               required
               style={styles.input}
               disabled={loading}
@@ -67,7 +67,7 @@ const Welcome: React.FC = () => {
               cursor: (!name.trim() || loading) ? 'not-allowed' : 'pointer'
             }}
           >
-            {loading ? 'מתחיל...' : 'התחילו לצ\'טט'}
+            {loading ? 'מתחיל...' : 'התחל עכשיו'}
           </button>
         </form>
       </div>
@@ -96,7 +96,7 @@ const styles = {
     borderRadius: '16px',
     boxShadow: '0 12px 30px rgba(0, 0, 0, 0.1)',
     width: '100%',
-    maxWidth: '450px',
+    maxWidth: '460px',
     textAlign: 'center' as const,
     direction: 'rtl' as const
   },
