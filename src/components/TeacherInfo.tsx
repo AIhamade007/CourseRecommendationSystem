@@ -20,6 +20,9 @@ const TeacherInfo: React.FC = () => {
     language: ''
   });
   const [loading, setLoading] = useState(false);
+  const [subjectSearchTerm, setSubjectSearchTerm] = useState('');
+  const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const [filteredSubjects, setFilteredSubjects] = useState<string[]>([]);
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -43,6 +46,7 @@ const TeacherInfo: React.FC = () => {
         subjectArea: subjectAreas ? subjectAreas.join(', ') : info.subjectArea || ''
       };
       setTeacherData(prev => ({ ...prev, ...updatedInfo }));
+      setSubjectSearchTerm(updatedInfo.subjectArea || '');
     }
   }, []);
 
@@ -62,8 +66,14 @@ const TeacherInfo: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!teacherData.subjectArea.trim() || !teacherData.schoolType) {
+    if (!teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language) {
       alert('אנא מלאו את כל השדות הנדרשים');
+      return;
+    }
+
+    // Check if the selected subject is from the predefined list
+    if (!predefinedSubjects.includes(teacherData.subjectArea)) {
+      alert('אנא בחרו מקצוע מהרשימה המוצעת');
       return;
     }
 
@@ -85,6 +95,98 @@ const TeacherInfo: React.FC = () => {
     'יהודי', "בדואי", "ערבי", "דרוזי", "צרקסי", "אחר"
   ];
 
+  const predefinedSubjects = [
+    'מתמטיקה',
+    'אנגלית',
+    'עברית',
+    'ערבית',
+    'פיזיקה',
+    'כימיה',
+    'ביולוגיה',
+    'היסטוריה',
+    'גיאוגרפיה',
+    'חינוך גופני',
+    'מורה בכיתה',
+    'חינוך מיוחד',
+    'מדעי המחשב',
+  ];
+
+  // Function to calculate similarity between strings (for auto-correction)
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    const editDistance = getEditDistance(longer.toLowerCase(), shorter.toLowerCase());
+    return (longer.length - editDistance) / longer.length;
+  };
+
+  // Levenshtein distance algorithm for string similarity
+  const getEditDistance = (str1: string, str2: string): number => {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + indicator
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  };
+
+  // Filter and sort subjects based on search term
+  const filterSubjects = (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setFilteredSubjects(predefinedSubjects.slice(0, 10)); // Show first 10 subjects when empty
+      return;
+    }
+
+    const results = predefinedSubjects
+      .map(subject => ({
+        subject,
+        similarity: calculateSimilarity(searchTerm, subject),
+        exactMatch: subject.includes(searchTerm),
+        startsWith: subject.startsWith(searchTerm)
+      }))
+      .filter(item => item.similarity > 0.3 || item.exactMatch) // Threshold for similarity
+      .sort((a, b) => {
+        // Prioritize exact matches and starts with
+        if (a.exactMatch && !b.exactMatch) return -1;
+        if (!a.exactMatch && b.exactMatch) return 1;
+        if (a.startsWith && !b.startsWith) return -1;
+        if (!a.startsWith && b.startsWith) return 1;
+        return b.similarity - a.similarity;
+      })
+      .slice(0, 8) // Limit to 8 suggestions
+      .map(item => item.subject);
+
+    setFilteredSubjects(results);
+  };
+
+  const handleSubjectSearch = (value: string) => {
+    setSubjectSearchTerm(value);
+    setTeacherData(prev => ({ ...prev, subjectArea: value }));
+    filterSubjects(value);
+    setShowSubjectDropdown(true);
+  };
+
+  const handleSubjectSelect = (subject: string) => {
+    setSubjectSearchTerm(subject);
+    setTeacherData(prev => ({ ...prev, subjectArea: subject }));
+    setShowSubjectDropdown(false);
+  };
+
+  // Initialize filtered subjects on component mount
+  React.useEffect(() => {
+    filterSubjects('');
+  }, []);
+
   return (
     <div style={styles.container} dir="rtl">
       <div style={styles.formContainer}>
@@ -97,14 +199,46 @@ const TeacherInfo: React.FC = () => {
           {/* Subject Area */}
           <div style={styles.section}>
             <label style={styles.sectionTitle}>איזה מקצוע אתה מלמד? *</label>
-            <input
-              type="text"
-              value={teacherData.subjectArea}
-              onChange={(e) => handleInputChange('subjectArea', e.target.value)}
-              placeholder="למשל: מתמטיקה, אנגלית, מורה בכיתה..."
-              style={styles.input}
-              required
-            />
+            <div style={styles.searchContainer}>
+              <input
+                type="text"
+                value={subjectSearchTerm}
+                onChange={(e) => handleSubjectSearch(e.target.value)}
+                onFocus={() => {
+                  setShowSubjectDropdown(true);
+                  filterSubjects(subjectSearchTerm);
+                }}
+                onBlur={() => {
+                  // Delay hiding dropdown to allow selection
+                  setTimeout(() => setShowSubjectDropdown(false), 200);
+                }}
+                placeholder="חפש או בחר מקצוע..."
+                style={{
+                  ...styles.input,
+                  borderColor: teacherData.subjectArea && predefinedSubjects.includes(teacherData.subjectArea) 
+                    ? '#4CAF50' 
+                    : teacherData.subjectArea && !predefinedSubjects.includes(teacherData.subjectArea)
+                    ? '#f44336'
+                    : '#e0e0e0'
+                }}
+                required
+              />
+              {showSubjectDropdown && filteredSubjects.length > 0 && (
+                <div style={styles.dropdown}>
+                  {filteredSubjects.map((subject, index) => (
+                    <div
+                      key={index}
+                      className="dropdown-item"
+                      style={styles.dropdownItem}
+                      onClick={() => handleSubjectSelect(subject)}
+                      onMouseDown={(e) => e.preventDefault()} // Prevent blur from firing before click
+                    >
+                      {subject}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* School Type */}
@@ -158,11 +292,11 @@ const TeacherInfo: React.FC = () => {
 
           <button 
             type="submit" 
-            disabled={loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language}
+            disabled={loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language || !predefinedSubjects.includes(teacherData.subjectArea)}
             style={{
               ...styles.button,
-              opacity: (loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language) ? 0.6 : 1,
-              cursor: (loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language) ? 'not-allowed' : 'pointer'
+              opacity: (loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language || !predefinedSubjects.includes(teacherData.subjectArea)) ? 0.6 : 1,
+              cursor: (loading || !teacherData.subjectArea.trim() || !teacherData.schoolType || !teacherData.language || !predefinedSubjects.includes(teacherData.subjectArea)) ? 'not-allowed' : 'pointer'
             }}
           >
             {loading ? 'שומר...' : 'המשך לבחירת קורסים'}
@@ -291,6 +425,38 @@ const styles = {
     transition: 'all 0.3s ease',
     boxShadow: '0 4px 15px rgba(106, 17, 203, 0.3)',
     marginTop: '16px'
+  },
+
+  searchContainer: {
+    position: 'relative' as const,
+    width: '100%'
+  },
+
+  dropdown: {
+    position: 'absolute' as const,
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    border: '2px solid #e0e0e0',
+    borderTop: 'none',
+    borderRadius: '0 0 8px 8px',
+    maxHeight: '200px',
+    overflowY: 'auto' as const,
+    zIndex: 1000,
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+  },
+
+  dropdownItem: {
+    padding: '12px 16px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontFamily: '"Inter", "Noto Sans Hebrew", Arial, sans-serif',
+    direction: 'rtl' as const,
+    textAlign: 'right' as const,
+    borderBottom: '1px solid #f0f0f0',
+    transition: 'background-color 0.2s ease',
+    backgroundColor: 'white'
   }
 };
 
@@ -305,6 +471,15 @@ const hoverStyles = `
   button:hover:not(:disabled) {
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4) !important;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f8f9ff !important;
+    color: #7a35d5 !important;
+  }
+
+  .dropdown-item:last-child {
+    border-bottom: none !important;
   }
 `;
 
