@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import backgroundImage from './pics/smsm.jpg';
+import { coursesData } from '../data/coursesData';
 
 interface Course {
   id: string;
@@ -18,61 +19,8 @@ const CourseSelection: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  // Available courses organized by categories
-  const courseCategories = {
-    'מדעים': [
-      { id: 'math', name: 'מתמטיקה', category: 'מדעים' },
-      { id: 'physics', name: 'פיזיקה', category: 'מדעים' },
-      { id: 'chemistry', name: 'כימיה', category: 'מדעים' },
-      { id: 'biology', name: 'ביולוגיה', category: 'מדעים' },
-      { id: 'computer-science', name: 'מדעי המחשב', category: 'מדעים' },
-      { id: 'earth-science', name: 'מדעי כדור הארץ', category: 'מדעים' }
-    ],
-    'שפות': [
-      { id: 'hebrew', name: 'עברית', category: 'שפות' },
-      { id: 'english', name: 'אנגלית', category: 'שפות' },
-      { id: 'arabic', name: 'ערבית', category: 'שפות' },
-      { id: 'french', name: 'צרפתית', category: 'שפות' },
-      { id: 'spanish', name: 'ספרדית', category: 'שפות' },
-      { id: 'russian', name: 'רוסית', category: 'שפות' }
-    ],
-    'מדעי הרוח': [
-      { id: 'history', name: 'היסטוריה', category: 'מדעי הרוח' },
-      { id: 'geography', name: 'גיאוגרפיה', category: 'מדעי הרוח' },
-      { id: 'civics', name: 'אזרחות', category: 'מדעי הרוח' },
-      { id: 'philosophy', name: 'פילוסופיה', category: 'מדעי הרוח' },
-      { id: 'literature', name: 'ספרות', category: 'מדעי הרוח' },
-      { id: 'social-studies', name: 'מדעי החברה', category: 'מדעי הרוח' }
-    ],
-    'אמנויות': [
-      { id: 'music', name: 'מוזיקה', category: 'אמנויות' },
-      { id: 'art', name: 'אמנות', category: 'אמנויות' },
-      { id: 'theater', name: 'תיאטרון', category: 'אמנויות' },
-      { id: 'dance', name: 'מחול', category: 'אמנויות' },
-      { id: 'photography', name: 'צילום', category: 'אמנויות' }
-    ],
-    'חינוך גופני ובריאות': [
-      { id: 'physical-education', name: 'חינוך גופני', category: 'חינוך גופני ובריאות' },
-      { id: 'health-education', name: 'חינוך לבריאות', category: 'חינוך גופני ובריאות' },
-      { id: 'nutrition', name: 'תזונה', category: 'חינוך גופני ובריאות' }
-    ],
-    'מקצועות טכנולוגיים': [
-      { id: 'technology', name: 'טכנולוגיה', category: 'מקצועות טכנולוגיים' },
-      { id: 'engineering', name: 'הנדסה', category: 'מקצועות טכנולוגיים' },
-      { id: 'robotics', name: 'רובוטיקה', category: 'מקצועות טכנולוגיים' },
-      { id: 'electronics', name: 'אלקטרוניקה', category: 'מקצועות טכנולוגיים' }
-    ],
-    'חינוך מיוחד': [
-      { id: 'special-education', name: 'חינוך מיוחד', category: 'חינוך מיוחד' },
-      { id: 'gifted-education', name: 'חינוך מחוננים', category: 'חינוך מיוחד' },
-      { id: 'learning-disabilities', name: 'קשיי למידה', category: 'חינוך מיוחד' }
-    ],
-    'חינוך יסודי': [
-      { id: 'elementary-general', name: 'מורה בכיתה (יסודי)', category: 'חינוך יסודי' },
-      { id: 'early-childhood', name: 'גיל הרך', category: 'חינוך יסודי' },
-      { id: 'kindergarten', name: 'גן ילדים', category: 'חינוך יסודי' }
-    ]
-  };
+  // Use the imported courses data from Excel
+  const courseCategories = coursesData;
 
   useEffect(() => {
     // Load previously selected courses if they exist
