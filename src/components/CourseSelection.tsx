@@ -260,12 +260,12 @@ const CourseSelection: React.FC = () => {
             <button 
               type="button" 
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || courseRatings.length === 0}
               className="top-continue-button"
               style={{
                 ...styles.topContinueButton,
-                opacity: loading ? 0.6 : 1,
-                cursor: loading ? 'not-allowed' : 'pointer'
+                opacity: (loading || courseRatings.length === 0) ? 0.6 : 1,
+                cursor: (loading || courseRatings.length === 0) ? 'not-allowed' : 'pointer'
               }}
             >
               {loading ? 'שומר...' : 'המשך לצ\'אט'}
@@ -338,11 +338,11 @@ const CourseSelection: React.FC = () => {
             </button>
             <button 
               type="submit" 
-              disabled={loading}
+              disabled={loading || courseRatings.length === 0}
               style={{
                 ...styles.submitButton,
-                opacity: loading ? 0.6 : 1,
-                cursor: loading ? 'not-allowed' : 'pointer'
+                opacity: (loading || courseRatings.length === 0) ? 0.6 : 1,
+                cursor: (loading || courseRatings.length === 0) ? 'not-allowed' : 'pointer'
               }}
             >
               {loading ? 'שומר...' : 'המשך לצ\'אט'}

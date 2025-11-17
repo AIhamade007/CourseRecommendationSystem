@@ -7,6 +7,7 @@ import TeacherInfo from './components/TeacherInfo';
 import CourseSelection from './components/CourseSelection';
 import Register from './components/Register';
 import Chat from './components/Chat';
+import Survey from './components/Survey';
 
 function App() {
   return (
@@ -29,6 +30,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Chat />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/survey" 
+              element={
+                <ProtectedRoute>
+                  <Survey />
                 </ProtectedRoute>
               } 
             />

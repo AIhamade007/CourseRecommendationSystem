@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { generateCourseRecommendation } from '../config/gemini';
 import { ChatMessage, TeacherProfile } from '../types/User';
 import chatBackgroundImage from './pics/GBG1.png';
@@ -11,7 +12,8 @@ const Chat: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { currentUser, logout } = useAuth();
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   const [isHovered, setIsHovered] = useState(false);
   
@@ -34,6 +36,10 @@ const Chat: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
+    // Save messages to localStorage whenever they change
+    if (messages.length > 0) {
+      localStorage.setItem('chatHistory', JSON.stringify(messages));
+    }
   }, [messages]);
 
   // Timer effect - starts when component mounts
@@ -55,8 +61,6 @@ const Chat: React.FC = () => {
     const handleBeforeUnload = () => {
       localStorage.removeItem('userName');
       localStorage.removeItem('teacherInfo');
-      localStorage.removeItem('userProfile');
-      localStorage.removeItem('selectedCourses');
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -100,14 +104,13 @@ const Chat: React.FC = () => {
     try {
       const userName = localStorage.getItem('userName') || 'User';
       const teacherInfo = JSON.parse(localStorage.getItem('teacherInfo') || '{}');
-      const selectedCourses = JSON.parse(localStorage.getItem('selectedCourses') || '[]');
       
       const teacherProfile: TeacherProfile = {
         name: userName,
         subjectArea: teacherInfo.subjectArea || teacherInfo.subjectAreas?.join(', ') || '',
         schoolType: teacherInfo.schoolType || '',
         language: teacherInfo.language || 'עברית',
-        previousCourses: selectedCourses
+        previousCourses: []
       };
 
       const response = await generateCourseRecommendation(inputMessage, teacherProfile);
@@ -148,23 +151,17 @@ const Chat: React.FC = () => {
     setLoading(false);
   };
 
-  const handleLogout = async () => {
-    try {
-      // Stop the timer
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
-      
-      // Clear all saved user information from localStorage
-      localStorage.removeItem('userName');
-      localStorage.removeItem('teacherInfo');
-      localStorage.removeItem('userProfile');
-      localStorage.removeItem('selectedCourses');
-      
-      await logout();
-    } catch (error) {
-      console.error('Failed to log out:', error);
+  const handleEndSession = () => {
+    // Stop the timer
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
     }
+    
+    // Save session time before navigating
+    localStorage.setItem('sessionTime', sessionTime.toString());
+    
+    // Navigate to survey page
+    navigate('/survey');
   };
 
   if (!currentUser) {
@@ -185,8 +182,8 @@ const Chat: React.FC = () => {
             <span style={styles.timerValue}>{formatTime(sessionTime)}</span>
             <span style={styles.timerLabel}>:זמן שיחה</span>
           </div>
-          <button onClick={handleLogout} style={styles.logoutButton}>
-            התנתקות
+          <button onClick={handleEndSession} style={styles.endSessionButton}>
+            סיים שיחה
           </button>
         </div>
       </header>
@@ -345,7 +342,7 @@ const styles = {
     letterSpacing: '1px',
     direction: 'ltr' as const
   },
-  logoutButton: {
+  endSessionButton: {
     backgroundImage: 'linear-gradient(to right, #7a35d5)',
     color: 'white',
     border: 'none',
