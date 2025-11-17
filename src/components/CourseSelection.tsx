@@ -11,13 +11,23 @@ interface Course {
   language: string;
 }
 
+interface CourseRating {
+  courseId: string;
+  courseName: string;
+  rating: number;
+}
+
 const CourseSelection: React.FC = () => {
-  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
+  const [courseRatings, setCourseRatings] = useState<CourseRating[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDomain, setSelectedDomain] = useState<string>('הכל');
   const [selectedSubDomain, setSelectedSubDomain] = useState<string>('הכל');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('הכל');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [currentRating, setCurrentRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -26,19 +36,51 @@ const CourseSelection: React.FC = () => {
   const courseCategories = coursesData;
 
   useEffect(() => {
-    // Load previously selected courses if they exist
-    const existingCourses = localStorage.getItem('selectedCourses');
-    if (existingCourses) {
-      setSelectedCourses(JSON.parse(existingCourses));
+    // Load previously rated courses if they exist
+    const existingRatings = localStorage.getItem('courseRatings');
+    if (existingRatings) {
+      setCourseRatings(JSON.parse(existingRatings));
     }
   }, []);
 
-  const handleCourseToggle = (courseId: string) => {
-    setSelectedCourses(prev => 
-      prev.includes(courseId)
-        ? prev.filter(id => id !== courseId)
-        : [...prev, courseId]
-    );
+  const handleCourseClick = (course: Course) => {
+    setSelectedCourse(course);
+    // Check if this course already has a rating
+    const existingRating = courseRatings.find(r => r.courseId === course.id);
+    setCurrentRating(existingRating?.rating || 0);
+    setModalOpen(true);
+  };
+
+  const handleRatingSubmit = () => {
+    if (selectedCourse && currentRating > 0) {
+      const newRating: CourseRating = {
+        courseId: selectedCourse.id,
+        courseName: selectedCourse.name,
+        rating: currentRating
+      };
+
+      // Update or add rating
+      setCourseRatings(prev => {
+        const filtered = prev.filter(r => r.courseId !== selectedCourse.id);
+        return [...filtered, newRating];
+      });
+
+      setModalOpen(false);
+      setSelectedCourse(null);
+      setCurrentRating(0);
+      setHoveredRating(0);
+    }
+  };
+
+  const handleRemoveRating = (courseId: string) => {
+    setCourseRatings(prev => prev.filter(r => r.courseId !== courseId));
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedCourse(null);
+    setCurrentRating(0);
+    setHoveredRating(0);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -47,20 +89,20 @@ const CourseSelection: React.FC = () => {
     try {
       setLoading(true);
       
-      // Store selected courses in localStorage
-      localStorage.setItem('selectedCourses', JSON.stringify(selectedCourses));
+      // Store course ratings in localStorage
+      localStorage.setItem('courseRatings', JSON.stringify(courseRatings));
       
       // Navigate to chat
       navigate('/chat');
     } catch (error) {
-      console.error('Failed to save course selection:', error);
+      console.error('Failed to save course ratings:', error);
       setLoading(false);
     }
   };
 
   const handleSkip = () => {
     // Store empty array if user skips
-    localStorage.setItem('selectedCourses', JSON.stringify([]));
+    localStorage.setItem('courseRatings', JSON.stringify([]));
     navigate('/chat');
   };
 
@@ -254,17 +296,27 @@ const CourseSelection: React.FC = () => {
               <div key={categoryName} style={styles.categorySection}>
                 <h3 style={styles.categoryTitle}>{categoryName}</h3>
                 <div style={styles.coursesGrid}>
-                  {courses.map(course => (
-                    <label key={course.id} style={styles.courseLabel}>
-                      <input
-                        type="checkbox"
-                        checked={selectedCourses.includes(course.id)}
-                        onChange={() => handleCourseToggle(course.id)}
-                        style={styles.checkbox}
-                      />
-                      <span style={styles.courseName}>{course.name}</span>
-                    </label>
-                  ))}
+                  {courses.map(course => {
+                    const rating = courseRatings.find(r => r.courseId === course.id);
+                    return (
+                      <div 
+                        key={course.id} 
+                        style={{
+                          ...styles.courseCard,
+                          border: rating ? '2px solid #7a35d5' : '1px solid #e0e0e0'
+                        }}
+                        onClick={() => handleCourseClick(course)}
+                        className="course-card"
+                      >
+                        <span style={styles.courseName}>{course.name}</span>
+                        {rating && (
+                          <div style={styles.ratingBadge}>
+                            {'⭐'.repeat(rating.rating)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))
@@ -272,7 +324,7 @@ const CourseSelection: React.FC = () => {
 
           <div style={styles.selectedInfo}>
             <p style={styles.selectedText}>
-              נבחרו {selectedCourses.length} קורסים
+              דירגת {courseRatings.length} קורסים
             </p>
           </div>
 
@@ -298,6 +350,59 @@ const CourseSelection: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {/* Rating Modal */}
+      {modalOpen && selectedCourse && (
+        <div style={styles.modalOverlay} onClick={closeModal}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h2 style={styles.modalTitle}>דרג את הקורס</h2>
+            <p style={styles.modalCourseName}>{selectedCourse.name}</p>
+            
+            <div style={styles.starsContainer}>
+              {[1, 2, 3, 4, 5].map((star) => {
+                const isFilled = hoveredRating >= star || currentRating >= star;
+                return (
+                  <span
+                    key={star}
+                    style={{
+                      ...styles.star,
+                      color: isFilled ? '#ffc107' : '#d3d3d3',
+                      filter: isFilled ? 'none' : 'grayscale(100%)'
+                    }}
+                    onMouseEnter={() => setHoveredRating(star)}
+                    onMouseLeave={() => setHoveredRating(0)}
+                    onClick={() => setCurrentRating(star)}
+                  >
+                    {isFilled ? '★' : '☆'}
+                  </span>
+                );
+              })}
+            </div>
+
+            <div style={styles.modalButtons}>
+              <button 
+                style={styles.cancelButton} 
+                onClick={closeModal}
+                className="cancel-button"
+              >
+                ביטול
+              </button>
+              <button 
+                style={{
+                  ...styles.confirmButton,
+                  opacity: currentRating > 0 ? 1 : 0.5,
+                  cursor: currentRating > 0 ? 'pointer' : 'not-allowed'
+                }}
+                onClick={handleRatingSubmit}
+                disabled={currentRating === 0}
+                className="confirm-button"
+              >
+                אישור
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -376,27 +481,33 @@ const styles = {
     marginTop: '12px'
   },
 
-  courseLabel: {
+  courseCard: {
     display: 'flex',
-    alignItems: 'center',
-    padding: '8px 12px',
+    flexDirection: 'column' as const,
+    alignItems: 'flex-start',
+    padding: '12px 16px',
     backgroundColor: '#f8f9fa',
     borderRadius: '8px',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     border: '1px solid #e0e0e0',
-    direction: 'rtl' as const
-  },
-
-  checkbox: {
-    marginLeft: '8px',
-    transform: 'scale(1.2)'
+    direction: 'rtl' as const,
+    position: 'relative' as const,
+    minHeight: '60px'
   },
 
   courseName: {
     fontSize: '14px',
     color: '#333',
-    fontWeight: 500
+    fontWeight: 500,
+    marginBottom: '4px'
+  },
+
+  ratingBadge: {
+    fontSize: '12px',
+    marginTop: '4px',
+    display: 'flex',
+    gap: '2px'
   },
 
   selectedInfo: {
@@ -562,19 +673,103 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 0.3s ease'
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  },
+
+  modalContent: {
+    backgroundColor: 'white',
+    padding: '32px',
+    borderRadius: '16px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+    maxWidth: '500px',
+    width: '90%',
+    direction: 'rtl' as const,
+    animation: 'slideIn 0.3s ease'
+  },
+
+  modalTitle: {
+    fontSize: '24px',
+    fontWeight: 700,
+    color: '#1f1f1f',
+    marginBottom: '8px',
+    textAlign: 'center' as const
+  },
+
+  modalCourseName: {
+    fontSize: '16px',
+    color: '#555',
+    marginBottom: '24px',
+    textAlign: 'center' as const,
+    fontWeight: 500
+  },
+
+  starsContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '8px',
+    marginBottom: '32px',
+    padding: '20px 0'
+  },
+
+  star: {
+    fontSize: '48px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    userSelect: 'none' as const
+  },
+
+  modalButtons: {
+    display: 'flex',
+    gap: '12px',
+    justifyContent: 'center'
+  },
+
+  cancelButton: {
+    padding: '12px 32px',
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+
+  confirmButton: {
+    padding: '12px 32px',
+    background: 'linear-gradient(to right, #7a35d5, #b84ef1)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(106, 17, 203, 0.3)'
   }
 };
 
 // Add hover styles
 const hoverStyles = `
-  .course-label:hover {
+  .course-card:hover {
     background-color: #e9ecef !important;
     border-color: #7a35d5 !important;
-  }
-  
-  .course-label input:checked + span {
-    color: #7a35d5 !important;
-    font-weight: 600 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(122, 53, 213, 0.2) !important;
   }
   
   .skip-button:hover {
@@ -603,8 +798,28 @@ const hoverStyles = `
   }
 
   .clear-filters-button:hover {
-    background-color: #0056b3 !important;
     transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3) !important;
+  }
+
+  .cancel-button:hover {
+    background-color: #5a6268 !important;
+  }
+
+  .confirm-button:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(106, 17, 203, 0.5) !important;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 `;
 
