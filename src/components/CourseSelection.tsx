@@ -8,13 +8,16 @@ interface Course {
   id: string;
   name: string;
   category: string;
+  language: string;
 }
 
 const CourseSelection: React.FC = () => {
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<string>('הכל');
+  const [selectedDomain, setSelectedDomain] = useState<string>('הכל');
+  const [selectedSubDomain, setSelectedSubDomain] = useState<string>('הכל');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('הכל');
 
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -61,38 +64,80 @@ const CourseSelection: React.FC = () => {
     navigate('/chat');
   };
 
-  // Get all available filter categories
-  const filterCategories = ['הכל', ...Object.keys(courseCategories)];
+  // Extract unique domains, sub-domains, and languages from categories
+  const getDomainsAndSubDomains = () => {
+    const domains = new Set<string>();
+    const subDomains = new Set<string>();
+    const languages = new Set<string>();
 
-  // Filter courses based on search term and selected filter
-  const getFilteredCourses = () => {
-    let filteredCategories: Record<string, Course[]> = { ...courseCategories };
-
-    // Apply category filter
-    if (selectedFilter !== 'הכל') {
-      const selectedCategory = courseCategories[selectedFilter as keyof typeof courseCategories];
-      if (selectedCategory) {
-        filteredCategories = {
-          [selectedFilter]: selectedCategory
-        };
+    Object.entries(courseCategories).forEach(([categoryName, courses]) => {
+      // Parse category name (format: "תחום - תת תחום" or just "תחום")
+      const parts = categoryName.split(' - ');
+      if (parts.length > 0) {
+        domains.add(parts[0].trim());
+        if (parts.length > 1) {
+          subDomains.add(parts[1].trim());
+        }
       }
-    }
-
-    // Apply search filter
-    if (searchTerm.trim()) {
-      const searchResults: Record<string, Course[]> = {};
-      Object.entries(filteredCategories).forEach(([categoryName, courses]) => {
-        const matchingCourses = courses.filter(course =>
-          course.name.includes(searchTerm.trim())
-        );
-        if (matchingCourses.length > 0) {
-          searchResults[categoryName] = matchingCourses;
+      
+      // Extract languages from courses
+      courses.forEach(course => {
+        if (course.language) {
+          languages.add(course.language);
         }
       });
-      return searchResults;
-    }
+    });
 
-    return filteredCategories;
+    return {
+      domains: ['הכל', ...Array.from(domains).sort()],
+      subDomains: ['הכל', ...Array.from(subDomains).sort()],
+      languages: ['הכל', ...Array.from(languages).sort()]
+    };
+  };
+
+  const { domains, subDomains, languages } = getDomainsAndSubDomains();
+
+  // Filter courses based on all criteria
+  const getFilteredCourses = () => {
+    const searchResults: Record<string, Course[]> = {};
+
+    Object.entries(courseCategories).forEach(([categoryName, courses]) => {
+      // Parse category for domain/subdomain filtering
+      const parts = categoryName.split(' - ');
+      const domain = parts[0]?.trim() || '';
+      const subDomain = parts[1]?.trim() || '';
+
+      // Apply domain filter
+      if (selectedDomain !== 'הכל' && domain !== selectedDomain) {
+        return;
+      }
+
+      // Apply sub-domain filter
+      if (selectedSubDomain !== 'הכל' && subDomain !== selectedSubDomain) {
+        return;
+      }
+
+      // Filter courses within this category
+      const matchingCourses = courses.filter(course => {
+        // Apply language filter
+        if (selectedLanguage !== 'הכל' && course.language !== selectedLanguage) {
+          return false;
+        }
+
+        // Apply search filter
+        if (searchTerm.trim() && !course.name.includes(searchTerm.trim())) {
+          return false;
+        }
+
+        return true;
+      });
+
+      if (matchingCourses.length > 0) {
+        searchResults[categoryName] = matchingCourses;
+      }
+    });
+
+    return searchResults;
   };
 
   const filteredCourseCategories = getFilteredCourses();
@@ -118,17 +163,46 @@ const CourseSelection: React.FC = () => {
             />
           </div>
 
-          {/* Filter Dropdown */}
-          <div style={styles.filterContainer}>
-            <select
-              value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
-              style={styles.filterSelect}
-            >
-              {filterCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+          {/* Filters Row */}
+          <div style={styles.filtersRow}>
+            {/* Domain Filter */}
+            <div style={styles.filterContainer}>
+              <select
+                value={selectedDomain}
+                onChange={(e) => setSelectedDomain(e.target.value)}
+                style={styles.filterSelect}
+              >
+                {domains.map(domain => (
+                  <option key={domain} value={domain}>{domain === 'הכל' ? 'כל התחומים' : domain}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sub-Domain Filter */}
+            <div style={styles.filterContainer}>
+              <select
+                value={selectedSubDomain}
+                onChange={(e) => setSelectedSubDomain(e.target.value)}
+                style={styles.filterSelect}
+              >
+                {subDomains.map(subDomain => (
+                  <option key={subDomain} value={subDomain}>{subDomain === 'הכל' ? 'כל תתי התחומים' : subDomain}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Language Filter */}
+            <div style={styles.filterContainer}>
+              <select
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                style={styles.filterSelect}
+              >
+                {languages.map(language => (
+                  <option key={language} value={language}>{language === 'הכל' ? 'כל השפות' : language}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -152,7 +226,7 @@ const CourseSelection: React.FC = () => {
                 cursor: loading ? 'not-allowed' : 'pointer'
               }}
             >
-              {loading ? 'שומר...' : 'המשך'}
+              {loading ? 'שומר...' : 'המשך לצ\'אט'}
             </button>
           </div>
         </div>
@@ -165,12 +239,14 @@ const CourseSelection: React.FC = () => {
                 type="button" 
                 onClick={() => {
                   setSearchTerm('');
-                  setSelectedFilter('הכל');
+                  setSelectedDomain('הכל');
+                  setSelectedSubDomain('הכל');
+                  setSelectedLanguage('הכל');
                 }}
                 className="clear-filters-button"
                 style={styles.clearFiltersButton}
               >
-                נקה חיפוש
+                נקה סינון
               </button>
             </div>
           ) : (
@@ -371,19 +447,15 @@ const styles = {
 
   topControls: {
     display: 'flex',
-    flexDirection: 'row' as const,
+    flexDirection: 'column' as const,
     gap: '16px',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     padding: '20px 0',
     borderBottom: '2px solid #e0e0e0',
-    marginBottom: '24px',
-    flexWrap: 'wrap' as const
+    marginBottom: '24px'
   },
 
   searchContainer: {
-    flex: '1',
-    minWidth: '200px'
+    width: '100%'
   },
 
   searchInput: {
@@ -399,8 +471,16 @@ const styles = {
     boxSizing: 'border-box' as const
   },
 
+  filtersRow: {
+    display: 'flex',
+    gap: '12px',
+    width: '100%',
+    flexWrap: 'wrap' as const
+  },
+
   filterContainer: {
-    minWidth: '150px'
+    flex: '1',
+    minWidth: '180px'
   },
 
   filterSelect: {
@@ -418,36 +498,44 @@ const styles = {
 
   topButtonContainer: {
     display: 'flex',
-    gap: '12px',
-    minWidth: 'fit-content'
+    gap: '16px',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: '8px',
+    flexWrap: 'wrap' as const
   },
 
   topSkipButton: {
-    padding: '12px 20px',
+    padding: '16px 173px',
     backgroundColor: '#6c757d',
     color: 'white',
     border: 'none',
-    borderRadius: '8px',
-    fontSize: '14px',
+    borderRadius: '12px',
+    fontSize: '16px',
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    whiteSpace: 'nowrap' as const
+    whiteSpace: 'nowrap' as const,
+    minWidth: '140px',
+    height: '52px'
   },
 
   topContinueButton: {
-    padding: '12px 20px',
+    padding: '16px 173px',
     background: 'linear-gradient(to right, #7a35d5, #b84ef1)',
     color: '#fff',
     border: 'none',
-    borderRadius: '8px',
-    fontSize: '14px',
+    borderRadius: '12px',
+    fontSize: '16px',
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    boxShadow: '0 4px 15px rgba(106, 17, 203, 0.3)',
-    whiteSpace: 'nowrap' as const
-  },
+    boxShadow: '0 6px 20px rgba(106, 17, 203, 0.35)',
+    whiteSpace: 'nowrap' as const,
+    minWidth: '160px',
+    height: '52px'
+    },
 
   noResults: {
     textAlign: 'center' as const,
@@ -466,7 +554,7 @@ const styles = {
 
   clearFiltersButton: {
     padding: '10px 20px',
-    backgroundColor: '#007bff',
+    background: 'linear-gradient(to right, #7a35d5, #b84ef1)',
     color: 'white',
     border: 'none',
     borderRadius: '6px',

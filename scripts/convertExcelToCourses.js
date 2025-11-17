@@ -25,6 +25,7 @@ data.forEach((row, index) => {
   const courseName = row['שם יחידת הכוורת']; // Unit Name
   const mainDomain = row['תחום']; // Main domain (e.g., "שפת אם")
   const subDomain = row['תת תחום']; // Sub domain (e.g., "עברית")
+  const language = row['שפת הקורס']; // Language of the course
   
   if (!courseName) {
     return; // Skip rows without course name
@@ -32,8 +33,10 @@ data.forEach((row, index) => {
 
   // Create category from main domain and sub domain
   let categoryName = mainDomain || 'כללי';
-  if (subDomain && subDomain !== mainDomain) {
+  if (subDomain && subDomain !== mainDomain && mainDomain) {
     categoryName = `${mainDomain} - ${subDomain}`;
+  } else if (subDomain && !mainDomain) {
+    categoryName = `כללי - ${subDomain}`;
   }
   
   // Create course ID from name
@@ -52,7 +55,8 @@ data.forEach((row, index) => {
   courseCategories[categoryName].push({
     id: courseId,
     name: courseName,
-    category: categoryName
+    category: categoryName,
+    language: language || 'עברית' // Default to Hebrew if not specified
   });
 });
 
@@ -67,6 +71,7 @@ export interface Course {
   id: string;
   name: string;
   category: string;
+  language: string;
 }
 
 export interface CourseCategories {
