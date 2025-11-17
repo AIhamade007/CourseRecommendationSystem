@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { generateCourseRecommendation } from '../config/gemini';
 import { ChatMessage, TeacherProfile } from '../types/User';
 import chatBackgroundImage from './pics/GBG1.png';
+import avatarImage from './pics/avatar.png';
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -160,9 +161,18 @@ const Chat: React.FC = () => {
               key={message.id}
               style={{
                 ...styles.messageWrapper,
-                justifyContent: message.isUser ? 'flex-end' : 'flex-start'
+                justifyContent: message.isUser ? 'flex-end' : 'flex-start',
+                alignItems: 'flex-end',
+                gap: '8px'
               }}
             >
+              {!message.isUser && (
+                <img 
+                  src={avatarImage} 
+                  alt="AI Assistant" 
+                  style={styles.avatar}
+                />
+              )}
               <div
                 style={{
                   ...styles.message,
@@ -182,7 +192,12 @@ const Chat: React.FC = () => {
             </div>
           ))}
           {loading && (
-            <div style={{ ...styles.messageWrapper, justifyContent: 'flex-start' }}>
+            <div style={{ ...styles.messageWrapper, justifyContent: 'flex-start', alignItems: 'flex-end', gap: '8px' }}>
+              <img 
+                src={avatarImage} 
+                alt="AI Assistant" 
+                style={styles.avatar}
+              />
               <div style={{ ...styles.message, backgroundColor: '#f1f1f1' }}>
                 <div style={styles.typingIndicator}>
                   <span style={styles.dot}></span>
@@ -382,6 +397,15 @@ const styles = {
     fontWeight: 600,
     transition: 'all 0.3s ease-in-out',
     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
+  },
+  avatar: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    objectFit: 'cover' as const,
+    border: '2px solid #7a35d5',
+    boxShadow: '0 2px 8px rgba(122, 53, 213, 0.2)',
+    flexShrink: 0
   }
 };
 
