@@ -14,15 +14,41 @@ const Chat: React.FC = () => {
   const { currentUser, logout } = useAuth();
 
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Session timer state
+  const [sessionTime, setSessionTime] = useState(0);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Format time as HH:MM:SS
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Timer effect - starts when component mounts
+  useEffect(() => {
+    timerIntervalRef.current = setInterval(() => {
+      setSessionTime(prev => prev + 1);
+    }, 1000);
+
+    // Cleanup timer on unmount
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Clear user data when browser tab is closed or user navigates away
@@ -124,6 +150,11 @@ const Chat: React.FC = () => {
 
   const handleLogout = async () => {
     try {
+      // Stop the timer
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      
       // Clear all saved user information from localStorage
       localStorage.removeItem('userName');
       localStorage.removeItem('teacherInfo');
@@ -146,12 +177,18 @@ const Chat: React.FC = () => {
         <div style={styles.userInfo}>
           <h2 style={styles.title}>צ'אט המלצות קורסים</h2>
           <p style={styles.userDetails}>
-            ברוך הבא, {localStorage.getItem('userName') || 'משתמש'} 
+            ברוך הבא, {localStorage.getItem('userName') || 'משתמש'}
           </p>
         </div>
-        <button onClick={handleLogout} style={styles.logoutButton}>
-          התנתקות
-        </button>
+        <div style={styles.headerRight}>
+          <div style={styles.timerContainer}>
+            <span style={styles.timerValue}>{formatTime(sessionTime)}</span>
+            <span style={styles.timerLabel}>:זמן שיחה</span>
+          </div>
+          <button onClick={handleLogout} style={styles.logoutButton}>
+            התנתקות
+          </button>
+        </div>
       </header>
 
       <div style={styles.chatContainer}>
@@ -278,6 +315,36 @@ const styles = {
     fontWeight: 500,
     opacity: 0.85
   },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px'
+  },
+  timerContainer: {
+    display: 'flex',
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    gap: '8px',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: '8px 16px',
+    borderRadius: '10px',
+    backdropFilter: 'blur(10px)',
+    direction: 'rtl' as const
+  },
+  timerLabel: {
+    fontSize: '14px',
+    fontWeight: 500,
+    opacity: 0.9,
+    direction: 'rtl' as const,
+    textAlign: 'right' as const
+  },
+  timerValue: {
+    fontSize: '18px',
+    fontWeight: 700,
+    fontFamily: 'monospace',
+    letterSpacing: '1px',
+    direction: 'ltr' as const
+  },
   logoutButton: {
     backgroundImage: 'linear-gradient(to right, #7a35d5)',
     color: 'white',
@@ -305,7 +372,7 @@ const styles = {
     backdropFilter: 'blur(2px)', 
     paddingTop: '120px',
     paddingBottom: '100px',
-    overflow: 'hidden' // <-- Add this
+    overflow: 'hidden'
   },
   messagesContainer: {
     flex: 1,
@@ -314,7 +381,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '10px',
-    height: 'calc(100vh - 220px)' // <-- Adjust height: header (120px) + inputForm (100px)
+    height: 'calc(100vh - 220px)'
   },
   messageWrapper: {
     display: 'flex',
