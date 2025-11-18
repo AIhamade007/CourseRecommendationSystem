@@ -29,7 +29,6 @@ const CourseSelection: React.FC = () => {
   const [currentRating, setCurrentRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
 
-  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   // Use the imported courses data from Excel
@@ -70,10 +69,6 @@ const CourseSelection: React.FC = () => {
       setCurrentRating(0);
       setHoveredRating(0);
     }
-  };
-
-  const handleRemoveRating = (courseId: string) => {
-    setCourseRatings(prev => prev.filter(r => r.courseId !== courseId));
   };
 
   const closeModal = () => {

@@ -28,6 +28,7 @@
     "eject": "react-scripts eject",
     "convert-courses": "node scripts/convertExcelToCourses.js"
   },
+  "proxy": "http://localhost:3002",
   "eslintConfig": {
     "extends": [
       "react-app",

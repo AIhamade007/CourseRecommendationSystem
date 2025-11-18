@@ -91,7 +91,8 @@ const Survey: React.FC = () => {
     
     // Try to save to server first
     try {
-      const response = await fetch('http://localhost:3001/api/save-session', {
+      console.log('Attempting to save session to server...');
+      const response = await fetch('/api/save-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,9 +100,16 @@ const Survey: React.FC = () => {
         body: jsonData,
       });
       
+      console.log('Server response status:', response.status);
       const result = await response.json();
+      console.log('Server response:', result);
+      
       if (result.success) {
-        console.log('Session saved to server:', result.filename);
+        console.log('✅ Session saved to server:', result.filename);
+        alert('השאלון נשמר בהצלחה!');
+      } else {
+        console.error('Server returned success=false:', result);
+        throw new Error('Server save failed');
       }
     } catch (error) {
       console.error('Failed to save to server, will download locally:', error);
@@ -136,11 +144,74 @@ const Survey: React.FC = () => {
   };
 
   const handleSkip = async () => {
+    // Get all session data from localStorage
+    const userName = localStorage.getItem('userName');
+    const teacherInfo = JSON.parse(localStorage.getItem('teacherInfo') || '{}');
+    const courseRatings = JSON.parse(localStorage.getItem('courseRatings') || '[]');
+    const sessionTime = localStorage.getItem('sessionTime');
+    const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+    
+    // Get current date and time
+    const now = new Date();
+    const sessionDate = now.toLocaleDateString('he-IL');
+    const sessionDateTime = now.toLocaleString('he-IL');
+    
+    // Create session data without survey
+    const sessionData = {
+      sessionDate: sessionDate,
+      sessionTime: sessionTime || '00:00:00',
+      sessionDateTime: sessionDateTime,
+      userInfo: {
+        userName: userName,
+        teacherInfo: teacherInfo,
+        courseRatings: courseRatings
+      },
+      conversationHistory: chatHistory,
+      survey: {
+        skipped: true,
+        skippedAt: sessionDateTime
+      }
+    };
+    
+    // Convert to JSON string
+    const jsonData = JSON.stringify(sessionData, null, 2);
+    
+    // Try to save to server first
+    try {
+      console.log('Attempting to save skipped session to server...');
+      const response = await fetch('/api/save-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonData,
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        console.log('✅ Skipped session saved to server:', result.filename);
+      }
+    } catch (error) {
+      console.error('Failed to save skipped session to server:', error);
+      
+      // Fallback: Download the file locally if server is not available
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `session_${userName}_${now.getTime()}_skipped.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+    
     // Clear user session data
     localStorage.removeItem('userName');
     localStorage.removeItem('teacherInfo');
     localStorage.removeItem('courseRatings');
     localStorage.removeItem('sessionTime');
+    localStorage.removeItem('chatHistory');
 
     // Logout and redirect
     await logout();
