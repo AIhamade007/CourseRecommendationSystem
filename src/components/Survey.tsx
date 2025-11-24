@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { db, storage } from '../config/firebase';
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 interface SurveyAnswers {
   overallExperience: number;
@@ -74,6 +77,7 @@ const Survey: React.FC = () => {
       sessionDate: sessionDate,
       sessionTime: sessionTime || '00:00:00',
       sessionDateTime: sessionDateTime,
+      timestamp: now.getTime(),
       userInfo: {
         userName: userName,
         teacherInfo: teacherInfo,
@@ -86,50 +90,31 @@ const Survey: React.FC = () => {
       }
     };
     
-    // Convert to JSON string
-    const jsonData = JSON.stringify(sessionData, null, 2);
-    
-    // Try to save to server first
+    // Save to Firebase
     try {
-      console.log('Attempting to save session to server...');
-      const response = await fetch('/api/save-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonData,
+      console.log('Saving session to Firebase...');
+      
+      // 1. Save to Firestore Database
+      const docRef = await addDoc(collection(db, 'sessions'), sessionData);
+      console.log('✅ Session saved to Firestore with ID:', docRef.id);
+      
+      // 2. Save as JSON file to Firebase Storage
+      const jsonString = JSON.stringify(sessionData, null, 2);
+      const fileName = `session_${userName}_${now.getTime()}.json`;
+      const storageRef = ref(storage, `sessions/${fileName}`);
+      
+      await uploadString(storageRef, jsonString, 'raw', {
+        contentType: 'application/json'
       });
       
-      console.log('Server response status:', response.status);
-      const result = await response.json();
-      console.log('Server response:', result);
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log('✅ JSON file saved to Storage. Download URL:', downloadURL);
       
-      if (result.success) {
-        console.log('✅ Session saved to server:', result.filename);
-        alert('השאלון נשמר בהצלחה!');
-      } else {
-        console.error('Server returned success=false:', result);
-        throw new Error('Server save failed');
-      }
+      alert('השאלון נשמר בהצלחה!');
     } catch (error) {
-      console.error('Failed to save to server, will download locally:', error);
-      
-      // Fallback: Download the file locally if server is not available
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `session_${userName}_${now.getTime()}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      console.error('Failed to save session to Firebase:', error);
+      alert('שגיאה בשמירת השאלון. אנא נסה שוב.');
     }
-    
-    // Also save to localStorage for backup
-    const existingSessions = JSON.parse(localStorage.getItem('sessionResults') || '[]');
-    existingSessions.push(sessionData);
-    localStorage.setItem('sessionResults', JSON.stringify(existingSessions));
 
     // Clear user session data
     localStorage.removeItem('userName');
@@ -161,6 +146,7 @@ const Survey: React.FC = () => {
       sessionDate: sessionDate,
       sessionTime: sessionTime || '00:00:00',
       sessionDateTime: sessionDateTime,
+      timestamp: now.getTime(),
       userInfo: {
         userName: userName,
         teacherInfo: teacherInfo,
@@ -173,37 +159,27 @@ const Survey: React.FC = () => {
       }
     };
     
-    // Convert to JSON string
-    const jsonData = JSON.stringify(sessionData, null, 2);
-    
-    // Try to save to server first
+    // Save to Firebase
     try {
-      console.log('Attempting to save skipped session to server...');
-      const response = await fetch('/api/save-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonData,
+      console.log('Saving skipped session to Firebase...');
+      
+      // 1. Save to Firestore Database
+      const docRef = await addDoc(collection(db, 'sessions'), sessionData);
+      console.log('✅ Skipped session saved to Firestore with ID:', docRef.id);
+      
+      // 2. Save as JSON file to Firebase Storage
+      const jsonString = JSON.stringify(sessionData, null, 2);
+      const fileName = `session_${userName}_${now.getTime()}_skipped.json`;
+      const storageRef = ref(storage, `sessions/${fileName}`);
+      
+      await uploadString(storageRef, jsonString, 'raw', {
+        contentType: 'application/json'
       });
       
-      const result = await response.json();
-      if (result.success) {
-        console.log('✅ Skipped session saved to server:', result.filename);
-      }
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log('✅ Skipped session JSON file saved to Storage. Download URL:', downloadURL);
     } catch (error) {
-      console.error('Failed to save skipped session to server:', error);
-      
-      // Fallback: Download the file locally if server is not available
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `session_${userName}_${now.getTime()}_skipped.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      console.error('Failed to save skipped session to Firebase:', error);
     }
     
     // Clear user session data
